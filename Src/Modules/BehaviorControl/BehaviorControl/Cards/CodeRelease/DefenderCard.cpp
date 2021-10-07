@@ -1,9 +1,9 @@
 /**
- * @file ApproachAndKickCard.cpp
+ * @file DefenderCard.cpp
  *
- * This file implements a behavior for approaching the ball and kick it to a given target.
+ * This file implements a behavior for covering the goal, hopefully in an intelligent way.
  *
- * @author Emanuele Antonioni
+ * @author Graziano Specchi & Tommaso Carlini
  */
 
 #include "Representations/BehaviorControl/FieldBall.h"
@@ -28,7 +28,7 @@ CARD(DefenderCard,
   CALLS(LookForward),
   CALLS(LookAtPoint),
   CALLS(Stand),
-  CALLS(WalkToBallController),
+  CALLS(WalkToBallControllerDefender),
   CALLS(WalkAtRelativeSpeed),
   CALLS(WalkToTarget),
   CALLS(Kick),
@@ -81,26 +81,62 @@ class DefenderCard : public DefenderCardBase
       {
         if(theRole.role == Role::searcher_1 || theRole.role == Role::searcher_2 || theRole.role == Role::searcher_4)
           goto searchForBall;
-
-        goto walkToLine;
+        // If I am too far from my defender area, use pathplanner
+        if((theRobotPose.translation - Vector2f(-3500,0)).norm()>1200)
+          goto usePathPlanner;
+        else
+        // If I am already close to my defender area, let's use Akshay Controlled Walk
+          goto useAkshayWalk;
           
       }
 
       action
       {
-        theLookAtPointSkill(Vector3f(theFieldBall.teamPositionRelative.x(), theFieldBall.teamPositionRelative.y(), 0.f));
+        theLookForwardSkill();
         theStandSkill();
       }
     }
 
-    state(walkToLine)
+    state(usePathPlanner)
     {
       transition
       {
         if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto searchForBall;
+        //std::cout<<" NORMA  "<<(theRobotPose.translation - Vector2f(-3500,0)).norm()<<"\n";
+        if(!thereIsSomeoneCloseToMe(800) && (theRobotPose.translation - Vector2f(-3500,0)).norm()<1000)
+          goto useAkshayWalk;
+      }
 
-        float obstacleDistance = std::numeric_limits<float>::infinity();
+      action
+      {
+        int y_offset_target = 0;
+        if(theTeamBallModel.position.y()>0){
+          //case in which the ball is on the right
+          y_offset_target=600;
+        }else{
+          //case in which the ball is on the left
+          y_offset_target=-600;
+        }
+        theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), Pose2f(-3500,y_offset_target));
+        //theLookAtPointSkill(Vector3f(-3500,y_offset_target, 0.f));
+        theLookForwardSkill();
+      }
+    }
+     
+    state(useAkshayWalk)
+    {
+      transition
+      {
+        if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
+          goto searchForBall;
+        // If I am too far from my defender area, use pathplanner
+        //if(theRobotPose.translation.x()>-2700 || (theRobotPose.translation.x()>-3500 && (theRobotPose.translation.y()>1100 || theRobotPose.translation.y()<-1100)))
+        if(thereIsSomeoneCloseToMe(700) || (theRobotPose.translation - Vector2f(-3500,0)).norm()>1200)
+          goto usePathPlanner;
+
+          // QUESTE RIGHE SEGUENTI NON C'ENTRANO NULLA MA LE HO LASCIATE COSÌ SE VOGLIAMO IMPLEMENTARE ANCHE L'OBS. AVOID. ABBIAMO GIA LE VARIABILI 
+        /*float obstacleDistance = std::numeric_limits<float>::infinity();
         for(auto obs : theObstacleModel.obstacles)
         {
           float dist = theBallModel.estimate.position.norm();
@@ -111,7 +147,8 @@ class DefenderCard : public DefenderCardBase
 
         if (obstacleDistance > 300.0) {
           //goto kickBall;
-        }
+        }*/
+
       }
       action
       {
@@ -129,7 +166,17 @@ class DefenderCard : public DefenderCardBase
           //case in which the ball is on the left
           y_offset_from=-600;
         }
-        
+
+        int x_offset_so_that_defender_stands_more_ahead_or_backward = 0;
+        if(theTeamBallModel.position.x()>0 && theTeamBallModel.position.x()<1500.f ){
+          x_offset_so_that_defender_stands_more_ahead_or_backward = 400;
+        }
+
+        // if the ball is really close to the goal, then try to help the goalie 
+        //std::cout<<" diffferenza palla " <<theTeamBallModel.position.x()+ 3500<<"\n" ;
+        if(theTeamBallModel.position.x()+ 3500 <300){
+          x_offset_so_that_defender_stands_more_ahead_or_backward = -200;
+        }
         /* let's find the goalie
         for (auto const& teammate : theTeamData.teammates){ //Teammate utilities
             if (teammate.number==1 and theTeamData.teammates.size()>0){ // Robot #1 is the goalie
@@ -152,103 +199,34 @@ class DefenderCard : public DefenderCardBase
         fromTarget = Pose2f(fromTarget.translation.x(),fromTarget.translation.y()+y_offset_from);
         
         float xOffset;
-        xOffset = theTeamBallModel.position.x() + 3500.f;
-        std::cout<<"From target x:"<<fromTarget.translation.x()<<" y:"<<fromTarget.translation.y()<<"\n";
-        std::cout<<"To   target x:"<<toTarget.translation.x()<<" y:"<<toTarget.translation.y()<<"\n";
-        
-        /* THIS IS JUST TO REMEMBER THE PARAMETERS
+        xOffset = theTeamBallModel.position.x() + 3500.f - x_offset_so_that_defender_stands_more_ahead_or_backward;
+        //std::cout<<"From target x:"<<fromTarget.translation.x()<<" y:"<<fromTarget.translation.y()<<"\n";
+        //std::cout<<"To   target x:"<<toTarget.translation.x()<<" y:"<<toTarget.translation.y()<<"\n";
+                /*
+                SKILL_INTERFACE(WalkToBallControllerDefender,
                   (const Pose2f&) fromTarget,
                   (const Pose2f&) toTarget,
                   (float)(0.0) offsetX,
                   (float)(0.0) offsetY,
                   (bool)(true) useLeftFoot,
                   (float)(1.0) gainWhenBallOnSide,
+                  (float)(10.0) forwardThreshold,
+                  (float)(50.0) sidewaysThreshold,
+                  (float)(7.0) rotationThreshold,
                   (float)(0.05) kp1,
                   (float)(-0.003) kp2,
-                  (float)(0.003) kp3
-        */
-        // I NEED TO KNOW THE ERRORS
-        // offsetX and offsetY are the gap between the robot's foot and the ball in the front and in the side respectively
-        Vector3f error;
-        float forwardError, sidewaysError, rotationError;
-        Pose2f targetPoint1, targetPoint2, feedbackPoint1, feedbackPoint2;
-
-        // Initialize the Points on the robot's food to get the vector based on the choosen left/right foot
-        if (false == true) {
-            feedbackPoint1 = theLibCheck.rel2Glob(theRobotModel.soleLeft.translation.x(), theRobotModel.soleLeft.translation.y());
-            feedbackPoint2 = theLibCheck.rel2Glob( theRobotModel.soleLeft.translation.x()+xOffset, theRobotModel.soleLeft.translation.y()+yOffset );
-        } else {
-            feedbackPoint1 = theLibCheck.rel2Glob(theRobotModel.soleRight.translation.x(), theRobotModel.soleRight.translation.y());
-            feedbackPoint2 = theLibCheck.rel2Glob(theRobotModel.soleRight.translation.x()+xOffset, theRobotModel.soleRight.translation.y()-yOffset );
-        }
-        
-        // Initialize the points to position the robot. First point is the ball and second points is the target optained as a parameter
-        // if (theTeamBallModel.position.x() > p.target.translation.x()) {
-        targetPoint1 = fromTarget;
-        targetPoint2 =  toTarget;
-        // } else {
-        //   targetPoint1 =  p.target;
-        //   targetPoint2.translation = theTeamBallModel.position;
-        // }
-
-        // --------------------Calculate orientation error------------------------ 
-        Vector2f target_vec(targetPoint2.translation.x() - targetPoint1.translation.x(), targetPoint2.translation.y() - targetPoint1.translation.y());
-        Vector2f feedback_vec(feedbackPoint2.translation.x()-feedbackPoint1.translation.x(), feedbackPoint2.translation.y() - feedbackPoint1.translation.y());
-
-        float dot = target_vec.dot(feedback_vec);
-        float det = target_vec.x()*feedback_vec.y() - target_vec.y()*feedback_vec.x();
-        rotationError = -(atan2( det, dot ) * 180)/pi;
-        // --------------------Get Sideways Error (Contact Distance)------------------------  
-        // -------------------- Shortest Perpendiculr Distance between two lines --------------------
-        // Equation of the line in the form of Ax + By + C = 0
-        
-        float A = -(targetPoint2.translation.y() - targetPoint1.translation.y()) / (targetPoint2.translation.x() - targetPoint1.translation.x());
-        float B = 1;
-        float C = -(targetPoint1.translation.y() + A*targetPoint1.translation.x());
-        // Estimated Point of contact
-        float x1 = feedbackPoint2.translation.x();
-        float y1 = feedbackPoint2.translation.y();
-
-        // Calculate perpendicular distance from the point to the line d = |A*x_1 + B*y_1 + C| / (A^2 + B^2)^(1/2)
-        sidewaysError = (A*x1 + B*y1 + C) / sqrt(pow(A,2) + pow(B,2));
-
-        // -------------------- Get Forward Error(Closest point on target vector) --------------------
-        float m1 = (targetPoint2.translation.y() - targetPoint1.translation.y()) / (targetPoint2.translation.x() - targetPoint1.translation.x());
-        float m2 = (targetPoint2.translation.y() - feedbackPoint2.translation.y()) / (targetPoint2.translation.x()-feedbackPoint2.translation.x());
-        float d = sqrt(pow((targetPoint2-feedbackPoint2).translation.x(), 2) + pow((targetPoint2-feedbackPoint2).translation.y(), 2)) * cos(atan2( m2-m1, (1+(m1*m2)) ));
-        float m = (targetPoint2.translation.y() - targetPoint1.translation.y()) / (targetPoint2.translation.x() - targetPoint1.translation.x());
-        Pose2f pointOnLine, point1, point2;
-
-        point1.translation.y() = targetPoint2.translation.y() + ((m*d)/sqrt(1+pow(m,2)));
-        point2.translation.y() = targetPoint2.translation.y() - ((m*d)/sqrt(1+pow(m,2)));
-        point1.translation.x() = targetPoint2.translation.x() - (targetPoint2.translation.y() - point1.translation.y())/m;
-        point2.translation.x() = targetPoint2.translation.x() - (targetPoint2.translation.y() - point2.translation.y())/m;
-        
-        if ((pow((point2-feedbackPoint2).translation.x(),2) + pow((point2-feedbackPoint2).translation.y(),2)) < (pow((point1-feedbackPoint2).translation.x(),2) + pow((point1-feedbackPoint2).translation.y(),2))) {
-            pointOnLine = point2;
-        } else { 
-            pointOnLine = point1;
-        }
-
-        if (theTeamBallModel.position.x() > pointOnLine.translation.x()) {
-            forwardError = sqrt(pow((pointOnLine-theTeamBallModel.position).translation.x(), 2)+pow((pointOnLine-theTeamBallModel.position).translation.y(), 2));
-        }else {
-            forwardError = -sqrt(pow((pointOnLine-theTeamBallModel.position).translation.x(), 2)+pow((pointOnLine-theTeamBallModel.position).translation.y(), 2));
-        }
-
-        // I NEED TO KNOW THE ERROR
-        std::cout<<"[Debug] F S R :"<<forwardError;
-        std::cout<<"      :"<<sidewaysError;
-        std::cout<<"      :"<<rotationError<<"\n";
-
-        if(forwardError>-20 && forwardError<20 && sidewaysError>-40 && sidewaysError<40 && rotationError>-5 && rotationError<5 ){
-          theStandSkill();
-        }else{
-          theWalkToBallControllerSkill(fromTarget, toTarget,
-                                     xOffset, yOffset,
-                                     false, 2.5);
-        }
-
+                  (float)(0.003) kp3 );
+                */
+        // NOTE: This skill includes also the Stand(). The 3 thresholds can be used to give different weight to the 3 types of errors
+        theWalkToBallControllerDefenderSkill(fromTarget, //fromTarget
+                                    toTarget, //toTarget
+                                    xOffset, //offsetX
+                                    yOffset, //offsetY
+                                    false,  // useLeftFoot
+                                    2.5, //gainWhenBallOnSide
+                                    10, //forwardThreshold
+                                    50, //sidewaysThreshold
+                                    6); //rotationThreshold
       }
     }
     state(searchForBall)
@@ -267,6 +245,24 @@ class DefenderCard : public DefenderCardBase
     }
   }
 
+  bool thereIsSomeoneCloseToMe(float threshold){
+    float minimum_distance = 10000;
+    if (theTeamData.teammates.size()==0) return false;
+    for (auto const& teammate : theTeamData.teammates){ //Teammate utilities
+      float current_distance = (teammate.theRobotPose.translation - theRobotPose.translation).norm();
+      if (current_distance<minimum_distance){
+        minimum_distance = current_distance;
+      }  
+    }
+    if(minimum_distance<threshold)  return true;
+    return false;
+       /* TOMMYX AGGIUNGERE PARTE PER CONSIDERAERE ANCHE GLI OPPONENTS 
+       for(auto obs : theObstacleModel.obstacles)
+        {
+          float dist = theLibCheck.distance(obs.center.norm();
+      */
+  }
+
   Angle calcAngleToGoal() const
   {
     return (theRobotPose.inversePose * Vector2f(theFieldDimensions.xPosOpponentGroundline, 0.f)).angle();
@@ -279,3 +275,11 @@ class DefenderCard : public DefenderCardBase
 };
 
 MAKE_CARD(DefenderCard);
+
+
+/*TOMMYX
+1) FATTO Coprire meglio la porta se portiere al centro  DA AGGIUNGERE LA DIPENDENZA DALLA POSIZIONE DEL PORTIERE E ANCHE CONSIDERARE SE È CADUTO COSI LO COPRE IL DIFENSORE 
+2) FATTO Se sto lontano, devo approcciare con il PathPlanner 
+3) FATTO Avanzo se la palla sta lontano FATTO
+4) PIUOMENOFATTO se c'è lo striker non gli rompe le scatole 
+  */

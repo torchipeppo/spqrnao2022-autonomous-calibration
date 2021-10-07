@@ -122,6 +122,30 @@ namespace Skills
                   (float)(0.003) kp3
 );
 
+
+ /** TO BE MERGED WITH THE ORIGINAL SKILL 
+   * This skill position the robot behind the ball using controller based approach.
+   * @param fromTarget The first target point
+   * @param toTarget The second target point to create a vector
+   * @param offsetX Offset in x-axis
+   * @param offsetY Offset in y-axis
+   * @param useLeftFoot The choose left or right foot
+   */
+  SKILL_INTERFACE(WalkToBallControllerDefender,
+                  (const Pose2f&) fromTarget,
+                  (const Pose2f&) toTarget,
+                  (float)(0.0) offsetX,
+                  (float)(0.0) offsetY,
+                  (bool)(true) useLeftFoot,
+                  (float)(1.0) gainWhenBallOnSide,
+                  (float)(10.0) forwardThreshold,
+                  (float)(50.0) sidewaysThreshold,
+                  (float)(7.0) rotationThreshold,
+                  (float)(0.05) kp1,
+                  (float)(-0.003) kp2,
+                  (float)(0.003) kp3
+);
+
   /**
    * Implementation of the approaching behavior employed in Challenge 3 of RoboCup 2021
    * @param target The target to shoot in global coordinates
