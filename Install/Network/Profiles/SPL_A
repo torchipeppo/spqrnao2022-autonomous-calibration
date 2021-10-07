@@ -1,0 +1,14 @@
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+ap_scan=1
+
+network={
+  ssid="SPL_FIELD_5ghz_A"
+  scan_ssid=1
+  proto=RSN WPA WPA2
+  key_mgmt=WPA-PSK
+  pairwise=TKIP CCMP
+  group=TKIP CCMP
+  priority=5
+  psk="Nao?!Nao?!"
+}

@@ -1,0 +1,22 @@
+<Simulation>
+
+  <!-- Ball texture by DaveH (http://www.headsub.com/Template/1048/Exploding-Football-Soccer-Ball) -->
+  <Surface name="ballTexture" diffuseColor="rgb(100%, 100%, 100%)" specularColor="rgb(60%, 60%, 60%)" shininess="30" diffuseTexture="../Textures/textures-ball.png"/>
+
+  <Material name="ballPlastic">
+    <!-- Original values: Friction 0.3, RollingFriction: 0.9-->
+    <Friction material="fieldCarpet" value="0.3"/>
+    <RollingFriction material="fieldCarpet" value="0.9"/>
+  </Material>
+
+  <Body name="ball">
+    <SphereAppearance radius="0.05">
+      <Surface ref="ballTexture"/>
+    </SphereAppearance>
+    <SphereGeometry radius="0.05">
+      <Material ref="ballPlastic"/>
+    </SphereGeometry>
+    <SphereMass value="0.085" radius="0.005"/>
+  </Body>
+
+</Simulation>

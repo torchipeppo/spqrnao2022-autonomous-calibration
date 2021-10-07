@@ -1,0 +1,12 @@
+call Includes/Fast
+
+dr representation:OpponentGoalModel
+dr debugDrawing3d:representation:OpponentGoalModel
+robot robot1
+pr inactivePlayer
+robot robot2
+pr inactivePlayer
+robot robot5
+pr inactivePlayer
+robot robot4
+pr inactivePlayer

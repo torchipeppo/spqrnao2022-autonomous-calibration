@@ -1,0 +1,20 @@
+mode = relativeSpeedMode;
+speed = {
+  rotation = nandeg;
+  translation = {
+    x = 0;
+    y = 0;
+  };
+};
+target = {
+  rotation = 0deg;
+  translation = {
+    x = 0;
+    y = 0;
+  };
+};
+walkKickRequest = {
+  kickType = none;
+  kickLeg = left;
+};
+"BehaviorControl/playing, GameControlCard, GameplayCard/supporter, SupporterCoreCardSentinel/moveAroundObstacle, Activity, WalkToTargetPathPlanner, LookLeftAndRight/s_5"

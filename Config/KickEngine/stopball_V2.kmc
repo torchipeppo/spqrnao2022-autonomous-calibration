@@ -1,0 +1,67 @@
+boostAngles = [];
+footOrigin = {x = 0; y = 50; z = -230;};
+footRotOrigin = {x = 0; y = 0; z = 0;};
+armOrigin = {x = 0; y = 145; z = 30;};
+handRotOrigin = {x = 0; y = 0; z = 0;};
+comOrigin = {x = 10; y = 0;};
+headOrigin = {x = 0; y = 0;};
+kpx = 0;
+kix = 1;
+kdx = 0;
+kpy = 0;
+kiy = 1;
+kdy = 0;
+loop = false;
+standLeft = true;
+ignoreHead = false;
+adjustKickFootPosition = 1;
+phaseParameters = [
+  {
+    duration = 1200;
+    leftFootTra1 = {x = 0; y = 50; z = -230;};
+    leftFootTra2 = {x = 0; y = 50; z = -230;};
+    leftFootRot1 = {x = 0; y = 0; z = 0;};
+    leftFootRot2 = {x = 0; y = 0; z = 0;};
+    rightFootTra1 = {x = 130; y = -200; z = -230;};
+    rightFootTra2 = {x = 130; y = -250; z = -230;};
+    rightFootRot1 = {x = -0; y = -0.5; z = -50;};
+    rightFootRot2 = {x = -0; y = -0.5; z = -50;};
+    leftArmTra1 = {x = -180; y = 180; z = 30;};
+    leftArmTra2 = {x = -300; y = 180; z = 30;};
+    leftHandRot1 = {x = 0; y = 0; z = 0;};
+    leftHandRot2 = {x = 0; y = 0; z = 0;};
+    rightArmTra1 = {x = 0; y = -190; z = 30;};
+    rightArmTra2 = {x = -300; y = -190; z = 30;};
+    rightHandRot1 = {x = 0; y = 0; z = -0;};
+    rightHandRot2 = {x = 0; y = 0; z = -0;};
+    comTra1 = {x = 10; y = 0;};
+    comTra2 = {x = 10; y = 0;};
+    headTra1 = {x = 0; y = 0;};
+    headTra2 = {x = 0; y = 0;};
+    odometryOffset = {x = 0; y = 0; z = 0;};
+  },
+  {
+    duration = 1200;
+    leftFootTra1 = {x = 0; y = 50; z = -230;};
+    leftFootTra2 = {x = 0; y = 50; z = -230;};
+    leftFootRot1 = {x = 0; y = 0; z = 0;};
+    leftFootRot2 = {x = 0; y = 0; z = 0;};
+    rightFootTra1 = {x = 130; y = -200; z = -220;};
+    rightFootTra2 = {x = 130; y = -250; z = -200;};
+    rightFootRot1 = {x = 0.2; y = -0.5; z = -50;};
+    rightFootRot2 = {x = 0.2; y = -0.5; z = -50;};
+    leftArmTra1 = {x = -180; y = 180; z = 30;};
+    leftArmTra2 = {x = -300; y = 180; z = 30;};
+    leftHandRot1 = {x = 0; y = 0; z = 0;};
+    leftHandRot2 = {x = 0; y = 0; z = 0;};
+    rightArmTra1 = {x = 0; y = -190; z = 30;};
+    rightArmTra2 = {x = -300; y = -190; z = 30;};
+    rightHandRot1 = {x = 0; y = 0; z = -0;};
+    rightHandRot2 = {x = 0; y = 0; z = -0;};
+    comTra1 = {x = 10; y = 0;};
+    comTra2 = {x = 10; y = 0;};
+    headTra1 = {x = 0; y = 0;};
+    headTra2 = {x = 0; y = 0;};
+    odometryOffset = {x = 0; y = 0; z = 0;};
+  }
+];

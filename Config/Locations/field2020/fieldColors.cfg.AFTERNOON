@@ -1,0 +1,3 @@
+maxNonColorSaturation = 62;
+blackWhiteDelimiter = 168;
+fieldHue = {min = 132; max = 186;};

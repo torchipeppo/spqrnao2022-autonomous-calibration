@@ -1,0 +1,9 @@
+call Includes/Fast
+
+dr debugDrawing3d:representation:OpponentGoalModel
+dr debugDrawing3d:module:BallPathProvider
+dr debugDrawing3d:representation:NearBallNavigationField
+dr debugDrawing3d:representation:BallCarrierModel
+vd representation:BallCarrierModel
+vd representation:NearBallNavigationField
+gc playing
