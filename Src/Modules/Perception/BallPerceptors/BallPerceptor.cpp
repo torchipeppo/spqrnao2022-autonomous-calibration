@@ -16,8 +16,6 @@
 #include "Tools/ImageProcessing/InImageSizeCalculations.h"
 #include "Tools/Math/Transformation.h"
 #include "Tools/NeuralNetwork/SimpleNN.h"
-#include "Tools/Debugging/DebugDrawings3D.h"
-#include "iostream"
 
 MAKE_MODULE(BallPerceptor, perception)
 
@@ -62,11 +60,6 @@ void BallPerceptor::update(BallPercept& theBallPercept)
     std::stringstream ss;
     ss << i << ": " << static_cast<int>(probs[i] * 100) << "\n";
     DRAWTEXT("module:BallPerceptor:spots", ballSpots[i].x(), ballSpots[i].y(), 15, ColorRGBA::red, ss.str());
-    
-    DEBUG_DRAWING3D("module:BallPerceptor:spots", "robot") {
-      SPHERE3D("module:BallPerceptor:spots", ballSpots[i].x(), ballSpots[i].y(), 10, 15, ColorRGBA(200, 0, 0));
-    }
-
 
 #ifdef TARGET_ROBOT
     if(probs[i] >= ensureThreshold)
