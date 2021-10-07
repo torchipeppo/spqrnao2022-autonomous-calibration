@@ -43,6 +43,8 @@
 CARD(StrikerOwnKickOffCard,
 {,
   CALLS(Activity),
+
+  CALLS(Say),
   
   CALLS(LookForward),
   CALLS(LookAtPoint),
@@ -107,6 +109,8 @@ CARD(StrikerOwnKickOffCard,
     (float) INITIAL_PASS_TARGET_Y,
 
     (float) OPPONENT_TOO_NEAR_FOR_KICKOFF_THRESHOLD,
+
+    (bool) ENABLE_ADVANCED_KICKOFF,
   }),
 });
 
@@ -117,7 +121,9 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
   bool preconditions() const override
   {
     // check that it is us who are kicking off...
-    return theGameInfo.kickingTeam == Global::getSettings().teamNumber &&
+    return ENABLE_ADVANCED_KICKOFF &&
+        getJollyIndex() > -1 &&
+        theGameInfo.kickingTeam == Global::getSettings().teamNumber &&
         theGameInfo.secsRemaining > (600-9);
 
         // ...and check the kickoff conditions
@@ -146,11 +152,12 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
       return -1;
   }
 
+  //NOT USED -> We're using a custom target specified in the cfg
   Vector2f chooseTarget() const {
 
     int jolly_index = getJollyIndex();
     Teammate jolly = theTeamData.teammates.at(jolly_index);
-    Vector2f jollyFinalPositionGuess = Vector2f(theFieldDimensions.xPosOpponentGroundline*0.4f, jolly.theRobotPose.translation.y());
+    Vector2f jollyFinalPositionGuess = Vector2f(INITIAL_PASS_TARGET_X, jolly.theRobotPose.translation.y());
     int jolly_y_sign = jolly.theRobotPose.translation.y() >=0 ? 1 : -1;
     return jollyFinalPositionGuess + Vector2f(0, -jolly_y_sign*0);
   }
@@ -180,6 +187,7 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
 
       action
       {
+        theSaySkill("striker own kick off card");
         theLookForwardSkill();
         theStandSkill();
         jolly_index = getJollyIndex();
@@ -209,8 +217,8 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
       {
         // chosenTarget =  thePassShare.passTarget.translation;
         // Consider other fixed positions to pass the ball
-        //chosenTarget =  chooseTarget();
-        chosenTarget = Vector2f(INITIAL_PASS_TARGET_X, INITIAL_PASS_TARGET_Y);
+        chosenTarget =  chooseTarget();
+        //chosenTarget = Vector2f(INITIAL_PASS_TARGET_X, INITIAL_PASS_TARGET_Y);
         theApproacher2021Skill(chosenTarget, 150.f, 50.f);
       }
     }
