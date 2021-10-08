@@ -34,6 +34,7 @@
 CARD(BallCarrierCard,
 {,
   CALLS(Activity),
+  CALLS(Say),
 
   CALLS(LookForward),
   CALLS(LookAtPoint),
@@ -41,7 +42,7 @@ CARD(BallCarrierCard,
   CALLS(ParametricLookLeftAndRight),
 
   CALLS(Stand),
-  //CALLS(CarryBall),
+  
   CALLS(CarryBallWithController),
   
   REQUIRES(FieldBall),
@@ -106,6 +107,7 @@ class BallCarrierCard : public BallCarrierCardBase
 
       action
       {
+        //theSaySkill("striker carrying ball");
         theActivitySkill(BehaviorStatus::ball_carrier_behavior_start);
         
         theLookForwardSkill();

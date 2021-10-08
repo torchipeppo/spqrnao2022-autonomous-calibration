@@ -43,7 +43,6 @@
 CARD(StrikerOwnKickOffCard,
 {,
   CALLS(Activity),
-
   CALLS(Say),
   
   CALLS(LookForward),
@@ -187,7 +186,7 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
 
       action
       {
-        theSaySkill("striker own kick off card");
+        //theSaySkill("striker ready for kick off");
         theLookForwardSkill();
         theStandSkill();
         jolly_index = getJollyIndex();

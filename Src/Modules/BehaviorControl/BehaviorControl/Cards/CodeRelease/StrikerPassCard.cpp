@@ -42,6 +42,7 @@
 CARD(StrikerPassCard,
 {,
   CALLS(Activity),
+  CALLS(Say),
   
   CALLS(LookForward),
   CALLS(LookAtPoint),
@@ -166,6 +167,7 @@ class StrikerPassCard : public StrikerPassCardBase
 
       action
       {
+        //theSaySkill("striker passing");
         theLookForwardSkill();
         theStandSkill();
       }

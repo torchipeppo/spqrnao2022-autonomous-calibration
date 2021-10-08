@@ -36,7 +36,7 @@ class DummyTwoCard : public DummyTwoCardBase
     theLookForwardSkill();
     theStandSkill();
     // Not implemented in the Code Release.
-    //theSaySkill("I am The Dummy Number Two, I am the son of the Dummy Number One");
+    ////theSaySkill("I am The Dummy Number Two, I am the son of the Dummy Number One");
   }
 };
 

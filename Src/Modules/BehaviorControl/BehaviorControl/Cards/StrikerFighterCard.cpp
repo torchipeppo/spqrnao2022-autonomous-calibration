@@ -32,6 +32,8 @@ using namespace std;
 CARD(StrikerFighterCard,
 {,
   CALLS(Activity),
+  CALLS(Say),
+
   CALLS(LookForward),
   CALLS(LookAtPoint),
   CALLS(LookLeftAndRight),
@@ -144,6 +146,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
       }
       action
       {
+        //theSaySkill("striker fighting");
         theStandSkill();
         theLookForwardSkill();
       }
