@@ -32,7 +32,7 @@ class TalkImpl : public TalkImplBase
   {
     if(p.name != lastSoundPlayed)
     {
-      SystemCall::playSound(p.name.c_str());
+      // SystemCall::playSound(p.name.c_str());
       lastSoundPlayed = p.name;
     }
   }

@@ -1015,7 +1015,7 @@ void GetUpEngine::doHelpMeStuff(GetUpEngineOutput& output)
   }
   if(theFrameInfo.getTimeSince(helpMeTimestamp) > 5000)
   {
-    SystemCall::playSound("helpMe");
+    // SystemCall::playSound("helpMe");
     helpMeTimestamp = theFrameInfo.time;
   }
 }
