@@ -38,6 +38,7 @@
 //see above
 #pragma GCC diagnostic pop
 
+// set to true to make the striker always kick, disregarding other cards. Useful in desperate cases.
 #define BERSERK false
 
 CARD(StrikerShootCard,
@@ -112,7 +113,7 @@ class StrikerShootCard : public StrikerShootCardBase
 
 
     // can only shoot in the opponent half of the field
-    if (theRobotPose.translation.x() <= 0) {
+    if (theRobotPose.translation.x() <= -theFieldDimensions.centerCircleRadius) {
       return false;
     }
     // that said, shoot as soon as you have a targetable area
@@ -128,7 +129,7 @@ class StrikerShootCard : public StrikerShootCardBase
     }
 
     // can only shoot in the opponent half of the field
-    if (theRobotPose.translation.x() <= 0) {
+    if (theRobotPose.translation.x() <= -theFieldDimensions.centerCircleRadius) {
       return true;
     }
     // that said, shoot as soon as you have a targetable area
