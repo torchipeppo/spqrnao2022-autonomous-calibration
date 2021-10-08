@@ -3,7 +3,7 @@ ctrl_interface_group=0
 ap_scan=1
 
 network={
-  ssid="SPL_FIELD_5ghz_A"
+  ssid="SPL_A"
   scan_ssid=1
   proto=RSN WPA WPA2
   key_mgmt=WPA-PSK

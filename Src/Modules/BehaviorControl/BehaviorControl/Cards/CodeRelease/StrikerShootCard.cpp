@@ -38,6 +38,8 @@
 //see above
 #pragma GCC diagnostic pop
 
+#define BERSERK false
+
 CARD(StrikerShootCard,
 {,
   CALLS(Activity),
@@ -104,6 +106,11 @@ class StrikerShootCard : public StrikerShootCardBase
 
   bool preconditions() const override
   {
+    if (BERSERK) {
+      return true;
+    }
+
+
     // can only shoot in the opponent half of the field
     if (theRobotPose.translation.x() <= 0) {
       return false;
@@ -116,6 +123,10 @@ class StrikerShootCard : public StrikerShootCardBase
   // NOTE these pre/post cond.s may fluctuate a bit, but let's wait till we have more cards
   bool postconditions() const override
   {
+    if (BERSERK) {
+      return false;
+    }
+
     // can only shoot in the opponent half of the field
     if (theRobotPose.translation.x() <= 0) {
       return true;
