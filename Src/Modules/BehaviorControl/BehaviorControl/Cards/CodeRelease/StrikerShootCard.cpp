@@ -41,6 +41,7 @@
 CARD(StrikerShootCard,
 {,
   CALLS(Activity),
+  CALLS(Say),
   
   CALLS(LookForward),
   CALLS(LookAtPoint),
@@ -142,6 +143,7 @@ class StrikerShootCard : public StrikerShootCardBase
 
       action
       {
+        //theSaySkill("striker shooting");
         theLookForwardSkill();
         theStandSkill();
       }
