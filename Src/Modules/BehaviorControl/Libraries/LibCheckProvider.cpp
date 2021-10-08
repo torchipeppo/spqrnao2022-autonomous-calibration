@@ -188,20 +188,22 @@ libCheck.defenderDynamicDistance = [&]() -> float
     
   libCheck.nearestOpponent = [&]() -> Pose2f
   {
-      Pose2f nearest = Pose2f(4500.f,0.f);
+      Pose2f nearest = Pose2f(7777.f,0.f);
       for(const auto& obs : theObstacleModel.obstacles){
-              if( (obs.center - theRobotPose.translation).squaredNorm() < std::pow(500.f, 2)) {
-                  nearest = obs.center;
-              }
-          }
+        if (!obs.isOpponent())  continue;
+        if( (obs.center - theRobotPose.translation).squaredNorm() < std::pow(500.f, 2)) {
+            nearest = obs.center;
+        }
+      }
       return nearest;
   };
 
   // WARNING: This function is not working properly, check it before using it
   libCheck.nearestOpponentWithFilter = [&](std::function<bool(Obstacle)> filterPredicate) -> Pose2f
   {
-      Pose2f nearest = Pose2f(7000.f,0.f);
+      Pose2f nearest = Pose2f(7777.f,0.f);
       for(const auto& obs : theObstacleModel.obstacles){
+        if (!obs.isOpponent())  continue;
         if(filterPredicate(obs) && (obs.center - theRobotPose.translation).squaredNorm() < std::pow(500.f, 2)) {
             nearest = obs.center;
         }

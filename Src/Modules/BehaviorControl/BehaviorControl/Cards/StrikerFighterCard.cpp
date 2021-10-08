@@ -45,6 +45,8 @@ CARD(StrikerFighterCard,
   CALLS(WalkToTargetPathPlannerStraight),
   CALLS(InWalkKick),
   CALLS(Kick),
+  CALLS(CarryBallWithController),
+
   USES(LibCheck),
   REQUIRES(RobotModel),
   REQUIRES(FieldBall),
@@ -70,6 +72,9 @@ CARD(StrikerFighterCard,
   (float) opponent_distance_threshold_post,
 
   (float) opponent_minimum_local_x,
+
+  (int) approachImpatience,
+  (int) kickMinTime,
   
   }),
 });
@@ -103,26 +108,38 @@ class StrikerFighterCard : public StrikerFighterCardBase
   {
     std:cout << "=====================================================" << std::endl;
     Vector2f nearestOpponentPosition = theLibCheck.nearestOpponent().translation;
+    std::cout << "global opp pos: ";
+    std::cout << nearestOpponentPosition.transpose() << std::endl;
     nearestOpponentPosition = theLibCheck.glob2Rel(nearestOpponentPosition.x(), nearestOpponentPosition.y()).translation;
 
-    bool ballNear = theBallModel.estimate.position.norm() < ball_distance_threshold_pre;
-    bool oppNear = nearestOpponentPosition.norm() < opponent_distance_threshold_pre;
+    // bool ballNear = theBallModel.estimate.position.norm() < ball_distance_threshold_pre;
+    bool ballNear = std::abs(theBallModel.estimate.position.x()) < ball_distance_threshold_pre && std::abs(theBallModel.estimate.position.y()) < ball_distance_threshold_pre;
+    // bool oppNear = nearestOpponentPosition.norm() < opponent_distance_threshold_pre;
+    bool oppNear = std::abs(nearestOpponentPosition.x()) < opponent_distance_threshold_pre && std::abs(nearestOpponentPosition.y()) < opponent_distance_threshold_pre;
+
     if(theGameInfo.kickingTeam == Global::getSettings().teamNumber){
       DEBUG_CODE(ballNear);
-      DEBUG_CODE(nearestOpponentPosition.norm());
+      // DEBUG_CODE(nearestOpponentPosition.norm());
+      DEBUG_CODE(nearestOpponentPosition.x());
+      DEBUG_CODE(nearestOpponentPosition.y());
       DEBUG_CODE(opponent_distance_threshold_pre);
       DEBUG_CODE(oppNear);
     }
+
     return ballNear && oppNear;
   }
 
   bool postconditions() const override
   {
+    if (option_time < 5000)  return false;
+
     Vector2f nearestOpponentPosition = theLibCheck.nearestOpponent().translation;
     nearestOpponentPosition = theLibCheck.glob2Rel(nearestOpponentPosition.x(), nearestOpponentPosition.y()).translation;
 
-    bool ballNear = theBallModel.estimate.position.norm() < ball_distance_threshold_post;
-    bool oppNear = nearestOpponentPosition.norm() < opponent_distance_threshold_post;
+    // bool ballNear = theBallModel.estimate.position.norm() < ball_distance_threshold_post;
+    bool ballNear = std::abs(theBallModel.estimate.position.x()) < ball_distance_threshold_post && std::abs(theBallModel.estimate.position.y()) < ball_distance_threshold_post;
+    // bool oppNear = nearestOpponentPosition.norm() < opponent_distance_threshold_post;
+    bool oppNear = std::abs(nearestOpponentPosition.x()) < opponent_distance_threshold_post && std::abs(nearestOpponentPosition.y()) < opponent_distance_threshold_post;
 
     return !ballNear || !oppNear;
 
@@ -137,6 +154,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
     {
       transition
       {
+        std::cout << "FIGHTER start" << std::endl;
         if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto searchForBall;
         else
@@ -156,6 +174,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
     {
       transition
       {
+        std::cout << "FIGHTER lookforball" << std::endl;
         if(theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto approach_Ball;
       }
@@ -170,6 +189,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
     {
       transition
       {
+        std::cout << "FIGHTER approachball" << std::endl;
         if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto searchForBall;
 
@@ -182,8 +202,11 @@ class StrikerFighterCard : public StrikerFighterCardBase
           }
         }
 
-        if (obstacleDistance > 300.0 && oppKickFlag) {
-          goto kickBall;
+        // if (obstacleDistance > 300.0 && oppKickFlag) {
+        //   goto kickBall;
+        // }
+        if (state_time > approachImpatience && oppKickFlag) {
+          goto carryBallForImpatience;
         }
       }
       action
@@ -202,6 +225,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
 
     state(kickBall) {
       transition {
+        std::cout << "FIGHTER kickball" << std::endl;
         if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto searchForBall;
           
@@ -213,7 +237,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
             obstacleDistance =  dist;
           }
         }
-        if (obstacleDistance <= 300.0) {
+        if (obstacleDistance <= 300.0 && state_time > kickMinTime) {
           goto approach_Ball;
         }
 
@@ -237,10 +261,35 @@ class StrikerFighterCard : public StrikerFighterCardBase
       }
     }
 
+    state(carryBallForImpatience) {
+      transition {
+        std::cout << "FIGHTER carryballforimpatience" << std::endl;
+        if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
+          goto searchForBall;
+          
+        float obstacleDistance = std::numeric_limits<float>::infinity();
+        for(auto obs : theObstacleModel.obstacles)
+        {
+          float dist = theLibCheck.distance(obs.center, theBallModel.estimate.position);
+          if (dist < obstacleDistance) {
+            obstacleDistance =  dist;
+          }
+        }
+        if (obstacleDistance <= 300.0 && state_time > kickMinTime) {
+          goto approach_Ball;
+        }
+
+      }
+      action {
+        theCarryBallWithControllerSkill(0.7, 0.6, true);
+      }
+    }
+
     state(searchForBall)
     {
       transition
       {
+        std::cout << "FIGHTER searchforball" << std::endl;
         if(theFieldBall.ballWasSeen())
           goto approach_Ball;
       }
