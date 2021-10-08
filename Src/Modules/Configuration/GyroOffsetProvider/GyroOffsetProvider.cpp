@@ -127,7 +127,7 @@ void GyroOffsetProvider::update(GyroOffset& gyroOffset)
            || std::fabs(average[1].y()) > thresholdZero
            || std::fabs(average[1].z()) > thresholdZero)
         {
-          SystemCall::playSound("sirene.wav");
+          // SystemCall::playSound("sirene.wav");
           SystemCall::say((std::string("Gyro has Offset ") + TypeRegistry::getEnumName(Global::getSettings().teamColor) + " " + std::to_string(theRobotInfo.number)).c_str());
           ANNOTATION("GyroOffsetProvider", "Added Offset " << gyroOffset.offset);
           OUTPUT_TEXT("GyroOffsetProvider - Added an Offset for the Gyros.");
@@ -168,7 +168,7 @@ void GyroOffsetProvider::checkGyroDelay(GyroOffset& gyroOffset)
     {
       gyroStuckTimestamp = theFrameInfo.time;
       ANNOTATION("GyroOffsetProvider", "No Gyro Update for " << theFrameInfo.getTimeSince(lastGyroChange) << "ms");
-      SystemCall::playSound("sirene.wav");
+      // SystemCall::playSound("sirene.wav");
       SystemCall::say((std::string("Gyro is wrong ") + TypeRegistry::getEnumName(Global::getSettings().teamColor) + " " + std::to_string(theRobotInfo.number)).c_str());
     }
   }

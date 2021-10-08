@@ -326,9 +326,9 @@ class ApproachAndKickCard : public ApproachAndKickCardBase
         if ( not alreadyEnqueued){
             alreadyEnqueued = true;
             std::string distanceTargetString = std::to_string(int(distanceConfirmed/1000.f));
-            SystemCall::say("KICKING TO DISTANCE");
-            SystemCall::say(distanceTargetString.c_str());
-            SystemCall::say("METERS");
+            // SystemCall::say("KICKING TO DISTANCE");
+            // SystemCall::say(distanceTargetString.c_str());
+            // SystemCall::say("METERS");
 
         }
         theLookAtPointSkill(Vector3f(theFieldBall.positionRelative.x(), theFieldBall.positionRelative.y(), 0.f));

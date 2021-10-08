@@ -114,7 +114,7 @@ void FootBumperStateProvider::update(FootBumperState& footBumperState)
   if(debug && theFrameInfo.getTimeSince(lastSoundTime) > static_cast<int>(soundDelay) && (footBumperState.status[Legs::left].contact || footBumperState.status[Legs::right].contact))
   {
     lastSoundTime = theFrameInfo.time;
-    SystemCall::playSound("doh.wav");
+    // SystemCall::playSound("doh.wav");
   }
 
   PLOT("module:FootBumperStateProvider:sumLeft", contactBufferLeft.sum());
