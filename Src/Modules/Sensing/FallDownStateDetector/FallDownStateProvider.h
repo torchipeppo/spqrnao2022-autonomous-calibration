@@ -251,17 +251,17 @@ private:
       {
         if(falling)
         {
-          say("Falling");
+          //say("Falling");
           goto fall;
         }
         else if(toUpright && stable)
         {
-          say("Upright");
+          //say("Upright");
           goto upright;
         }
         else if(toSquatting && stable)
         {
-          say("Squatting");
+          //say("Squatting");
           goto squatting;
         }
         else
