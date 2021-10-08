@@ -104,7 +104,7 @@ class DefenderCard : public DefenderCardBase
         if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
           goto searchForBall;
         //std::cout<<" NORMA  "<<(theRobotPose.translation - Vector2f(-3500,0)).norm()<<"\n";
-        if(!thereIsSomeoneCloseToMe(800) && (theRobotPose.translation - Vector2f(-3500,0)).norm()<1000)
+        if(!thereIsSomeoneCloseToMe(650) && (theRobotPose.translation - Vector2f(-3500,0)).norm()<1000)
           goto useAkshayWalk;
       }
 
@@ -118,7 +118,27 @@ class DefenderCard : public DefenderCardBase
           //case in which the ball is on the left
           y_offset_target=-600;
         }
-        theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), Pose2f(-3500,y_offset_target));
+        
+        int goalieY = 0;
+        for (auto const& teammate : theTeamData.teammates){
+          if (teammate.theRobotPose.translation.x()<-4000){
+            goalieY = teammate.theRobotPose.translation.y();
+          }  
+        }
+
+        if(goalieY>-300 && goalieY<300){
+          if(theTeamBallModel.position.y()>0){
+            //case in which the ball is on the right
+            y_offset_target=600;
+          }else{
+            //case in which the ball is on the left
+            y_offset_target=-600;
+          }
+        }
+        int x_offset_obstacle = 0;
+        if(thereIsSomeoneCloseToMe(650)) x_offset_obstacle = -300;
+
+        theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), Pose2f(-3500+x_offset_obstacle,y_offset_target));
         //theLookAtPointSkill(Vector3f(-3500,y_offset_target, 0.f));
         theLookForwardSkill();
       }
@@ -132,7 +152,7 @@ class DefenderCard : public DefenderCardBase
           goto searchForBall;
         // If I am too far from my defender area, use pathplanner
         //if(theRobotPose.translation.x()>-2700 || (theRobotPose.translation.x()>-3500 && (theRobotPose.translation.y()>1100 || theRobotPose.translation.y()<-1100)))
-        if(thereIsSomeoneCloseToMe(700) || (theRobotPose.translation - Vector2f(-3500,0)).norm()>1200)
+        if(thereIsSomeoneCloseToMe(550) || (theRobotPose.translation - Vector2f(-3500,0)).norm()>1200)
           goto usePathPlanner;
 
           // QUESTE RIGHE SEGUENTI NON C'ENTRANO NULLA MA LE HO LASCIATE COSÌ SE VOGLIAMO IMPLEMENTARE ANCHE L'OBS. AVOID. ABBIAMO GIA LE VARIABILI 
@@ -152,30 +172,48 @@ class DefenderCard : public DefenderCardBase
       }
       action
       {
+        int goalieY = 0;
+        for (auto const& teammate : theTeamData.teammates){
+          if (teammate.theRobotPose.translation.x()<-4000){
+            goalieY = teammate.theRobotPose.translation.y();
+          }  
+        }
+
         theLookAtPointSkill(Vector3f(theBallModel.estimate.position.x(), theBallModel.estimate.position.y(), 0.f));
         int y_offset_from = 0;
         int y_offset_to = 0;
         int x_offset_additional = 0;
         int y_goalie = 0;
         bool goalie_isFallen = false;
+
           // We want to cover the "internal" pole
-        if(theTeamBallModel.position.y()>0){
-          //case in which the ball is on the right
-          y_offset_from=600;
-        }else{
-          //case in which the ball is on the left
-          y_offset_from=-600;
+        if(goalieY>-300 && goalieY<300){
+          if(theTeamBallModel.position.y()>0){
+            //case in which the ball is on the right
+            y_offset_from=600;
+          }else{
+            //case in which the ball is on the left
+            y_offset_from=-600;
+          }
         }
 
+                  
+        if(goalieY>400){
+          //case in which the ball is on the right
+          y_offset_from=-600;
+        }else if (goalieY<-400){
+          //case in which the ball is on the left
+          y_offset_from=600;
+        }
         int x_offset_so_that_defender_stands_more_ahead_or_backward = 0;
-        if(theTeamBallModel.position.x()>0 && theTeamBallModel.position.x()<1500.f ){
+        if(theTeamBallModel.position.x()>0){
           x_offset_so_that_defender_stands_more_ahead_or_backward = 400;
         }
 
         // if the ball is really close to the goal, then try to help the goalie 
         //std::cout<<" diffferenza palla " <<theTeamBallModel.position.x()+ 3500<<"\n" ;
-        if(theTeamBallModel.position.x()+ 3500 <300){
-          x_offset_so_that_defender_stands_more_ahead_or_backward = -200;
+        if(theTeamBallModel.position.x()+ 3500 <500){
+          x_offset_so_that_defender_stands_more_ahead_or_backward = -400;
         }
         /* let's find the goalie
         for (auto const& teammate : theTeamData.teammates){ //Teammate utilities
@@ -250,17 +288,26 @@ class DefenderCard : public DefenderCardBase
     if (theTeamData.teammates.size()==0) return false;
     for (auto const& teammate : theTeamData.teammates){ //Teammate utilities
       float current_distance = (teammate.theRobotPose.translation - theRobotPose.translation).norm();
+      // If it is the goalie, I want to give less weight 
+      if (teammate.theRobotPose.translation.x()<-4000) current_distance = current_distance + 400;
       if (current_distance<minimum_distance){
         minimum_distance = current_distance;
       }  
     }
+    for(auto obs : theObstacleModel.obstacles)
+    {
+      float current_distance = obs.center.norm();
+      if(obs.isOpponent()){
+        if (current_distance<minimum_distance){
+          minimum_distance = current_distance;
+        }  
+      }
+    }
     if(minimum_distance<threshold)  return true;
     return false;
-       /* TOMMYX AGGIUNGERE PARTE PER CONSIDERAERE ANCHE GLI OPPONENTS 
-       for(auto obs : theObstacleModel.obstacles)
-        {
-          float dist = theLibCheck.distance(obs.center.norm();
-      */
+       /* TOMMYX AGGIUNGERE PARTE PER CONSIDERAERE ANCHE GLI OPPONENTS */
+
+      
   }
 
   Angle calcAngleToGoal() const
