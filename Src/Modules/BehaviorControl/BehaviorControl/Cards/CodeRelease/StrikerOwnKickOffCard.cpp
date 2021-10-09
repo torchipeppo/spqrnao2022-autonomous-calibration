@@ -186,7 +186,7 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
 
       action
       {
-        //theSaySkill("striker ready for kick off");
+        theSaySkill("striker ready for kick off");
         theLookForwardSkill();
         theStandSkill();
         jolly_index = getJollyIndex();

@@ -107,7 +107,7 @@ class BallCarrierCard : public BallCarrierCardBase
 
       action
       {
-        //theSaySkill("striker carrying ball");
+        theSaySkill("striker carrying ball");
         theActivitySkill(BehaviorStatus::ball_carrier_behavior_start);
         
         theLookForwardSkill();

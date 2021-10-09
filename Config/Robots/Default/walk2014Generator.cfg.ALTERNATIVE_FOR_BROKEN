@@ -1,0 +1,13 @@
+triggerForwardBoostByThisLeftAmount = 10;
+sideForwardMaxSpeed = 150;
+maxSpeed = { rotation = 70deg; translation = { x = 150; y = 100; }; };
+maxSpeedBackwards = 100;
+baseWalkPeriod = 200; //was 300
+sidewaysWalkPeriodIncreaseFactor = 0.4; //default was 0.5, with 0.4 the maxSpeed for y can be higher
+walkHipHeight = 240; //was 230
+baseFootLift = 8;
+torsoOffset = 10;
+gyroLowPassRatio = 0.6; //use 0.7 on V5
+gyroForwardBalanceFactor = 0.07; //0.02 to 0.08 are normal values //latest: was 0.05
+gyroBackwardBalanceFactor = 0.07; //was 0.05
+gyroSidewaysBalanceFactor = 0.07; //was 0.05

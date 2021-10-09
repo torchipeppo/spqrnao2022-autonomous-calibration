@@ -167,7 +167,7 @@ class StrikerPassCard : public StrikerPassCardBase
 
       action
       {
-        //theSaySkill("striker passing");
+        theSaySkill("striker passing");
         theLookForwardSkill();
         theStandSkill();
       }

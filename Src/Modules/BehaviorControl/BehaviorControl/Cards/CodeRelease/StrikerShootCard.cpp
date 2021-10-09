@@ -155,7 +155,7 @@ class StrikerShootCard : public StrikerShootCardBase
 
       action
       {
-        //theSaySkill("striker shooting");
+        theSaySkill("striker shooting");
         theLookForwardSkill();
         theStandSkill();
       }

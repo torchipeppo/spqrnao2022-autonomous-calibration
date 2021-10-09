@@ -164,7 +164,7 @@ class StrikerFighterCard : public StrikerFighterCardBase
       }
       action
       {
-        //theSaySkill("striker fighting");
+        theSaySkill("striker fighting");
         theStandSkill();
         theLookForwardSkill();
       }

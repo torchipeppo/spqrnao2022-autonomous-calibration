@@ -1,0 +1,6 @@
+1) Fix InWalkKick: given that we have to walk through the ball, we risk hitting it with the other foot (and we usually do it). NaoDevils for example just use a longer step (they rewrote the WalkEngine from scratch).
+2) Check for oscillations between behaviors
+3) Avoiding teammates or not?
+4) Sometimes more than one striker (hysteresis in the coordinator)
+5) Threshold precision vs speed tradeoff: adjusting thresholds?
+6) Two states for ball carrier realignment with different tuned parameters
