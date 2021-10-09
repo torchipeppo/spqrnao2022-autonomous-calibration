@@ -153,12 +153,15 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
 
   //NOT USED -> We're using a custom target specified in the cfg
   Vector2f chooseTarget() const {
-
     int jolly_index = getJollyIndex();
-    Teammate jolly = theTeamData.teammates.at(jolly_index);
-    Vector2f jollyFinalPositionGuess = Vector2f(INITIAL_PASS_TARGET_X, jolly.theRobotPose.translation.y());
-    int jolly_y_sign = jolly.theRobotPose.translation.y() >=0 ? 1 : -1;
-    return jollyFinalPositionGuess + Vector2f(0, -jolly_y_sign*0);
+    if (jolly_index >-1){
+      Teammate jolly = theTeamData.teammates.at(jolly_index);
+      Vector2f jollyFinalPositionGuess = Vector2f(INITIAL_PASS_TARGET_X, jolly.theRobotPose.translation.y());
+      int jolly_y_sign = jolly.theRobotPose.translation.y() >=0 ? 1 : -1;
+      return jollyFinalPositionGuess + Vector2f(0, -jolly_y_sign*0);
+    }else{
+      return Vector2f(INITIAL_PASS_TARGET_X, INITIAL_PASS_TARGET_Y);
+    }
   }
 
   Angle calcAngleToTarget(Pose2f target) const
