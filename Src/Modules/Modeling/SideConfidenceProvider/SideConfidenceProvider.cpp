@@ -26,7 +26,7 @@ void SideConfidenceProvider::update(SideConfidence& sideConfidence)
 
   // In some set plays the ball is replaced, this might be confusing.
   // Thus, all agreements become invalid in this case.
-  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_FREE_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK) ||
+  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_KICK) ||
      (theCognitionStateChanges.lastSetPlay != SET_PLAY_CORNER_KICK && theGameInfo.setPlay == SET_PLAY_CORNER_KICK))
     timeWhenLastBallReplacingSetPlayStarted = theFrameInfo.time;
   if(theFrameInfo.getTimeSince(timeWhenLastBallReplacingSetPlayStarted) < 4000) // time is in seconds since last time the ball was put in again

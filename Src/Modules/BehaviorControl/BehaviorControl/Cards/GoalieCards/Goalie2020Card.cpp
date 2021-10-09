@@ -59,7 +59,7 @@ class Goalie2020Card : public Goalie2020CardBase
         }
     }
 
-    return ( ( ((int)theGameInfo.setPlay != SET_PLAY_GOAL_FREE_KICK && !theLibCheck.isGoalieInKickAwayRange             //conditions to exit from goalieKickAway state in Goalie2020
+    return ( ( ((int)theGameInfo.setPlay != SET_PLAY_GOAL_KICK && !theLibCheck.isGoalieInKickAwayRange             //conditions to exit from goalieKickAway state in Goalie2020
           && (theBallModel.estimate.position.norm() > 175 && !iAmMostNearPlayer)) ||
           (!theLibCheck.isBallInKickAwayRange && !iAmMostNearPlayer) ) || (theLibCheck.timeSinceBallWasSeen > 1000)); 
   }
@@ -79,7 +79,7 @@ class Goalie2020Card : public Goalie2020CardBase
     }
 
     return ((velocity.x() < 0 && velocity.norm()/position.norm() >= 0.7) ||                                             // has to dive
-    ((int)theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK && theGameInfo.kickingTeam == theOwnTeamInfo.teamNumber) ||    // goal free kick
+    ((int)theGameInfo.setPlay == SET_PLAY_GOAL_KICK && theGameInfo.kickingTeam == theOwnTeamInfo.teamNumber) ||    // goal free kick
     (   (  (case1                                                                                                       // case1: in gotoGoaliePosition, backTrackInPose, mainLoop, or goalieOutOfPoles
             && theBallModel.estimate.velocity.norm() < (float) SPQR::MOVING_BALL_MIN_VELOCITY // norm < 200
             && theLibCheck.isBallInKickAwayRange    // palla < 900

@@ -86,7 +86,7 @@ class GoalieApproachAndKickCard : public GoalieApproachAndKickCardBase
     }
 
     return (velocity.x() < 0 && velocity.norm()/position.norm() >= 0.7)                                     // conditions to dive in Goalie2020 common transition, TODO: add other conditions not to dive outside area
-    || ( ( ((int)theGameInfo.setPlay != SET_PLAY_GOAL_FREE_KICK && !theLibCheck.isGoalieInKickAwayRange     // conditions to exit from goalieKickAway state in Goalie2020
+    || ( ( ((int)theGameInfo.setPlay != SET_PLAY_GOAL_KICK && !theLibCheck.isGoalieInKickAwayRange     // conditions to exit from goalieKickAway state in Goalie2020
           && (theBallModel.estimate.position.norm() > 175 && !iAmMostNearPlayer)) ||
           (!theLibCheck.isBallInKickAwayRange && !iAmMostNearPlayer) ) || (theLibCheck.timeSinceBallWasSeen > 1000)); 
     // OBS: in 2019 version, there was also condition action_done

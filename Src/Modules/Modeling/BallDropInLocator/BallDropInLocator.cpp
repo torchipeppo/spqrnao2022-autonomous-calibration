@@ -51,7 +51,7 @@ void BallDropInLocator::update(BallDropInModel& ballDropInModel)
       ballDropInModel.dropInPositions.emplace_back(
         ownTeamTouchedLast ? theFieldDimensions.xPosOpponentPenaltyMark : theFieldDimensions.xPosOwnPenaltyMark,
         outLeft ? theFieldDimensions.yPosRightPenaltyArea : theFieldDimensions.yPosLeftPenaltyArea);
-      ballDropInModel.isValid = useOutPosition || theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK;
+      ballDropInModel.isValid = useOutPosition || theGameInfo.setPlay == SET_PLAY_GOAL_KICK;
       break;
     case BallDropInModel::cornerKick:
       ballDropInModel.dropInPositions.emplace_back(
@@ -79,7 +79,7 @@ void BallDropInLocator::update(BallDropInModel& ballDropInModel)
 void BallDropInLocator::updateTouchPositions()
 {
   // When entering a ball replacing free kick, nothing should depend on old events anymore.
-  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_FREE_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK) ||
+  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_KICK) ||
      (theCognitionStateChanges.lastSetPlay != SET_PLAY_CORNER_KICK && theGameInfo.setPlay == SET_PLAY_CORNER_KICK) ||
      (theCognitionStateChanges.lastSetPlay != SET_PLAY_KICK_IN && theGameInfo.setPlay == SET_PLAY_KICK_IN))
   {
@@ -182,7 +182,7 @@ void BallDropInLocator::updateBall(BallDropInModel& ballDropInModel)
 
 void BallDropInLocator::updateGameControllerData(BallDropInModel& ballDropInModel)
 {
-  if(theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_FREE_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK)
+  if(theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_KICK)
   {
     ownTeamTouchedLast = theGameInfo.kickingTeam != theOwnTeamInfo.teamNumber;
     ballDropInModel.dropInType = BallDropInModel::goalFreeKick;

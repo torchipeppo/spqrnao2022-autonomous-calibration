@@ -54,7 +54,7 @@ void OwnSideModelProvider::update(OwnSideModel& ownSideModel)
       ownSideModel.returnFromManualPenalty = true;
     }
     else if(theCognitionStateChanges.lastPenalty != PENALTY_NONE && theCognitionStateChanges.lastPenalty != PENALTY_SPL_ILLEGAL_MOTION_IN_SET &&
-            theRobotInfo.penalty == PENALTY_NONE && theFrameInfo.getTimeSince(timeWhenPenalized) > (theCognitionStateChanges.lastPenalty == PENALTY_SPL_ILLEGAL_POSITIONING ? minPenaltyTimeIP : minPenaltyTime))
+            theRobotInfo.penalty == PENALTY_NONE && theFrameInfo.getTimeSince(timeWhenPenalized) > (theCognitionStateChanges.lastPenalty == PENALTY_SPL_ILLEGAL_POSITION ? minPenaltyTimeIP : minPenaltyTime))
     {
       distanceWalkedAtKnownPosition = theOdometer.distanceWalked;
       largestXPossibleAtKnownPosition = theFieldDimensions.xPosOwnPenaltyMark + 700;

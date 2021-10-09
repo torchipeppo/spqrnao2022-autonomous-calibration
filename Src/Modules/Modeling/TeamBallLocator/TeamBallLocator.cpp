@@ -308,7 +308,7 @@ bool TeamBallLocator::checkForResetByGameSituation()
   if(theGameInfo.state != STATE_PLAYING && theGameInfo.state != STATE_SET)
     reset = true;
   // Same for any goal free kick or corner kick (kick ins and pushing free kicks are different because the ball stays about where it was):
-  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_FREE_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK) ||
+  if((theCognitionStateChanges.lastSetPlay != SET_PLAY_GOAL_KICK && theGameInfo.setPlay == SET_PLAY_GOAL_KICK) ||
       (theCognitionStateChanges.lastSetPlay != SET_PLAY_CORNER_KICK && theGameInfo.setPlay == SET_PLAY_CORNER_KICK))
     reset = true;
   // If any of the above conditions was true, we delete every ball information that we have stored:

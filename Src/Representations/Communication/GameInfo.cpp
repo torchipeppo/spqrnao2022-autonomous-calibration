@@ -123,7 +123,7 @@ std::string GameInfo::getStateAsString() const
       {
         case SET_PLAY_NONE:
           return "Playing";
-        case SET_PLAY_GOAL_FREE_KICK:
+        case SET_PLAY_GOAL_KICK:
           return "Goal Free Kick";
         case SET_PLAY_PUSHING_FREE_KICK:
           return "Pushing Free Kick";
@@ -148,7 +148,7 @@ void GameInfo::serialize(In* in, Out* out)
   STREAM(competitionType);  // type of the competition (COMPETITION_TYPE_NORMAL, COMPETITION_TYPE_MIXEDTEAM)
   STREAM(gamePhase); // phase of the game (GAME_PHASE_NORMAL, GAME_PHASE_PENALTYSHOOT, etc)
   STREAM(state); // STATE_READY, STATE_PLAYING, ...
-  STREAM(setPlay); // active set play (SET_PLAY_NONE, SET_PLAY_GOAL_FREE_KICK, etc)
+  STREAM(setPlay); // active set play (SET_PLAY_NONE, SET_PLAY_GOAL_KICK, etc)
   STREAM(firstHalf); // 1 = game in first half, 0 otherwise
   STREAM(kickingTeam); // team number
   STREAM(secsRemaining); // estimate of number of seconds remaining in the half.

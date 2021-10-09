@@ -204,14 +204,14 @@ bool GameController::handleFreeKickCommand(const std::string& command)
   if(command == "goalFreeKickForFirstTeam")
   {
     timeWhenSetPlayBegan = Time::getCurrentSystemTime();
-    gameInfo.setPlay = SET_PLAY_GOAL_FREE_KICK;
+    gameInfo.setPlay = SET_PLAY_GOAL_KICK;
     gameInfo.kickingTeam = 1;
     return true;
   }
   else if(command == "goalFreeKickForSecondTeam")
   {
     timeWhenSetPlayBegan = Time::getCurrentSystemTime();
-    gameInfo.setPlay = SET_PLAY_GOAL_FREE_KICK;
+    gameInfo.setPlay = SET_PLAY_GOAL_KICK;
     gameInfo.kickingTeam = 2;
     return true;
   }
@@ -512,7 +512,7 @@ void GameController::checkIllegalPositioning(int robot)
      ((gameInfo.kickingTeam != (robot < numOfRobots / 2 ? 1 : 2)) && r.lastPose.translation.squaredNorm() < sqr(fieldDimensions.centerCircleRadius + footLength)))
   {
     RoboCup::RobotInfo& tr = teamInfos[robot * 2 / numOfRobots].players[robot % (numOfRobots / 2)];
-    r.info.penalty = PENALTY_SPL_ILLEGAL_POSITIONING;
+    r.info.penalty = PENALTY_SPL_ILLEGAL_POSITION;
     tr.penalty = r.info.penalty;
     r.timeWhenPenalized = Time::getCurrentSystemTime();
   }
@@ -561,7 +561,7 @@ void GameController::referee()
 
     if(r.info.penalty != PENALTY_NONE)
     {
-      r.info.secsTillUnpenalised = static_cast<uint8_t>(std::max<int>((r.info.penalty == PENALTY_SPL_ILLEGAL_POSITIONING ? 15 : 45) - Time::getTimeSince(r.timeWhenPenalized) / 1000, 0));
+      r.info.secsTillUnpenalised = static_cast<uint8_t>(std::max<int>((r.info.penalty == PENALTY_SPL_ILLEGAL_POSITION ? 15 : 45) - Time::getTimeSince(r.timeWhenPenalized) / 1000, 0));
       RoboCup::RobotInfo& tr = teamInfos[i * 2 / numOfRobots].players[i % (numOfRobots / 2)];
       tr.secsTillUnpenalised = r.info.secsTillUnpenalised;
 

@@ -40,12 +40,12 @@ class GoalFreeKickCard : public GoalFreeKickCardBase
 {
   bool preconditions() const override
   {
-    return theGameInfo.state == STATE_PLAYING && theGameInfo.setPlay == SET_PLAY_GOAL_FREE_KICK;
+    return theGameInfo.state == STATE_PLAYING && theGameInfo.setPlay == SET_PLAY_GOAL_KICK;
   }
 
   bool postconditions() const override
   {
-    return theGameInfo.state != STATE_PLAYING || theGameInfo.setPlay != SET_PLAY_GOAL_FREE_KICK;
+    return theGameInfo.state != STATE_PLAYING || theGameInfo.setPlay != SET_PLAY_GOAL_KICK;
   }
 
   void execute() override
