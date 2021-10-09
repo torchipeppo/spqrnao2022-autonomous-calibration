@@ -101,7 +101,7 @@ class DefenderCard : public DefenderCardBase
     {
       transition
       {
-        if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
+        if(!theTeamBallModel.isValid)
           goto searchForBall;
         //std::cout<<" NORMA  "<<(theRobotPose.translation - Vector2f(-3500,0)).norm()<<"\n";
         if(!thereIsSomeoneCloseToMe(650) && (theRobotPose.translation - Vector2f(-3500,0)).norm()<1000)
@@ -137,9 +137,14 @@ class DefenderCard : public DefenderCardBase
         }
         int x_offset_obstacle = 0;
         if(thereIsSomeoneCloseToMe(650)) x_offset_obstacle = -300;
-
-        theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), Pose2f(-3500+x_offset_obstacle,y_offset_target));
-        //theLookAtPointSkill(Vector3f(-3500,y_offset_target, 0.f));
+        //std::cout<<"STO CACCHIO DE NORMA È "<<(theRobotPose.translation - Vector2f(-3500+x_offset_obstacle,y_offset_target)).norm()<<"\n";
+        
+        if ((theRobotPose.translation - Vector2f(-3500+x_offset_obstacle,y_offset_target)).norm() <400)//theLookAtPointSkill(Vector3f(-3500,y_offset_target, 0.f));
+          theStandSkill();
+        else if((theRobotPose.translation - Vector2f(-3500+x_offset_obstacle,y_offset_target)).norm() <1000)
+          theWalkToTargetPathPlannerSkill(Pose2f(0.2f,0.2f,0.2f), Pose2f(-3500+x_offset_obstacle,y_offset_target));
+        else
+          theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), Pose2f(-3500+x_offset_obstacle,y_offset_target));
         theLookForwardSkill();
       }
     }
@@ -148,7 +153,7 @@ class DefenderCard : public DefenderCardBase
     {
       transition
       {
-        if(!theFieldBall.ballWasSeen(ballNotSeenTimeout))
+        if(!theTeamBallModel.isValid)
           goto searchForBall;
         // If I am too far from my defender area, use pathplanner
         //if(theRobotPose.translation.x()>-2700 || (theRobotPose.translation.x()>-3500 && (theRobotPose.translation.y()>1100 || theRobotPose.translation.y()<-1100)))
@@ -262,16 +267,16 @@ class DefenderCard : public DefenderCardBase
                                     yOffset, //offsetY
                                     false,  // useLeftFoot
                                     2.5, //gainWhenBallOnSide
-                                    10, //forwardThreshold
-                                    50, //sidewaysThreshold
-                                    6); //rotationThreshold
+                                    30, //forwardThreshold
+                                    80, //sidewaysThreshold
+                                    30); //rotationThreshold
       }
     }
     state(searchForBall)
     {
       transition
       {
-        if(theFieldBall.ballWasSeen())
+        if(theTeamBallModel.isValid)
           goto start;
       }
 

@@ -150,13 +150,14 @@ class WalkToBallControllerDefenderImpl : public WalkToBallControllerDefenderImpl
         /*Vector3f NewSpeeds = Vector3f(forwardSpeed,sidewaysSpeed,rotationSpeed);
 
         /if (NewSpeeds.norm() < p.standThreshold) {*/
+        std::cout<<"Errore: forward "<<std::abs(forwardError)<<" sideways "<<std::abs(sidewaysError)<<" rotation "<<std::abs(rotationError)<<"\n";
         if(std::abs(forwardError)<p.forwardThreshold && std::abs(sidewaysError)<p.sidewaysThreshold && std::abs(rotationError)<p.rotationThreshold){
           theMotionRequest.motion = MotionRequest::stand;
         }
         else {
           theMotionRequest.motion = MotionRequest::walk;
           theMotionRequest.walkRequest.mode = WalkRequest::relativeSpeedMode;
-          theMotionRequest.walkRequest.speed = Pose2f(rotationSpeed, forwardSpeed, sidewaysSpeed);
+          theMotionRequest.walkRequest.speed = Pose2f(rotationSpeed, forwardSpeed*0.25, sidewaysSpeed*0.75);
           theMotionRequest.walkRequest.walkKickRequest = WalkRequest::WalkKickRequest();
         }
         theLibCheck.inc(LibCheck::motionRequest);
