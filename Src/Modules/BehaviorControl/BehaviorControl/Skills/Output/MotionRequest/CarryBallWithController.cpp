@@ -386,7 +386,7 @@ class CarryBallWithControllerImpl : public CarryBallWithControllerImplBase
           pathChosen = false;
 
           std::cout<<"choose_path -> realignWithController: target chosen"<<std::endl;
-          goto realignWithController;
+          goto walkToBall;
         }
       }
       action
