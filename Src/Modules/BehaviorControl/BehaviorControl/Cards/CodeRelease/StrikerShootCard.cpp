@@ -83,17 +83,15 @@ CARD(StrikerShootCard,
   {,
     (int)(50) initialWaitTime,
     (int)(1200) time_to_stand_before_kick,
-    (int)(500) time_to_stand_after_kick,
+    (int)(1200) time_to_stand_after_kick,
     (float)(230) BALL_KICK_OFFSET_X,
-    (float)(50) BALL_KICK_OFFSET_Y,
+    (float)(65) BALL_KICK_OFFSET_Y, //era 50
     //Used to align to the static approach point
     (Rangef)({100.f, 700.f}) approachXRange,
-    (Rangef)({-100.f, 100.f}) approachYRange,
+    (Rangef)({-80.f, 80.f}) approachYRange, //era -100 100
     //Used to align very precisely just before kicking
     (Rangef)({210.f, 240.f}) smallApproachXRange,
-    (Rangef)({-100.f, -40.f}) smallApproachYRange,
-    (Rangef)({-10.f, 10.f}) smallBallAlignmentRange,
-    (Rangef)({-5.f, 5.f}) smallerBallAlignmentRange,
+    (Rangef)({-8.f, 8.f}) smallBallAlignmentRange, //era -10 10
     (int)(3000) maxKickWaitTime,
     (int)(10) minKickWaitTime,
     (float)(50.0f) areaIntervalThresholdPre,

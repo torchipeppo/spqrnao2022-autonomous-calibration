@@ -301,6 +301,9 @@ void SelfLocator::motionUpdate()
   // If the robot returns from a penalty and is not walking, any rotation (that might come from
   // the z-axis gyro as the robot is turned too late!) is ignored!
   float odometryRotation = theOdometer.odometryOffset.rotation;
+  
+  if(theRobotInfo.number == 4) //test Cesare broken gyro
+    odometryRotation = 0.f;
   if(theFrameInfo.getTimeSince(timeOfLastReturnFromPenalty) < 10000 && theMotionInfo.motion != MotionRequest::walk)
     odometryRotation = 0.f;
 
