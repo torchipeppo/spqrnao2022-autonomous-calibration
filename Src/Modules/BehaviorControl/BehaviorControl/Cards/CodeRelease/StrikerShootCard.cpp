@@ -82,7 +82,7 @@ CARD(StrikerShootCard,
   DEFINES_PARAMETERS(
   {,
     (int)(50) initialWaitTime,
-    (int)(1000) time_to_stand_before_kick,
+    (int)(1200) time_to_stand_before_kick,
     (int)(500) time_to_stand_after_kick,
     (float)(230) BALL_KICK_OFFSET_X,
     (float)(50) BALL_KICK_OFFSET_Y,

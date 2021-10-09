@@ -200,11 +200,13 @@ class StrikerOwnKickOffCard : public StrikerOwnKickOffCardBase
       {
         if (option_time > 7000) {
           jolly_index = getJollyIndex();
-          Teammate jolly = theTeamData.teammates.at(jolly_index);
-          Vector2f ballRelative = theFieldBall.positionRelative;
-          bool close = approachXRange.isInside(ballRelative.x()) && approachYRange.isInside(ballRelative.y());
-          if (close && state_time && jolly.theRobotPose.translation.x() > 500.f) {
-            goto approach_fixedtarget;
+          if (jolly_index != -1) {
+            Teammate jolly = theTeamData.teammates.at(jolly_index);
+            Vector2f ballRelative = theFieldBall.positionRelative;
+            bool close = approachXRange.isInside(ballRelative.x()) && approachYRange.isInside(ballRelative.y());
+            if (close && state_time && jolly.theRobotPose.translation.x() > 500.f) {
+              goto approach_fixedtarget;
+            }
           }
           if (theApproacher2021Skill.isDone()) {
             std::cout<<"approach -> stand_before_kick: DONE"<<std::endl;
