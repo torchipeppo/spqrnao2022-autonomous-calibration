@@ -33,7 +33,7 @@ while true ; do
         "")
             break
             ;;
-        16 | Augusto | Alice | A| P |Tower)
+        16 | Augusto | Alice | A | P |Tower)
             echo "Augusto is no. $number"
             # echo "$number 16" >> $FORM_FILE
             # echo "$number 16 Augusto" >> $FORM_HUMAN_FILE
