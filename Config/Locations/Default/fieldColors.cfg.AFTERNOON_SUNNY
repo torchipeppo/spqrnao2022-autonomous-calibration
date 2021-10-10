@@ -1,0 +1,4 @@
+maxNonColorSaturation = 80;
+blackWhiteDelimiter = 32
+;
+fieldHue = {min = 132; max = 186;}; // AFTERNOON

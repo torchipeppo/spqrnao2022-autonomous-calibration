@@ -41,6 +41,9 @@ CARD(ReadyCard,
     (DeckOfCards<CardRegistry>) opponentFreeKick,
     (DeckOfCards<CardRegistry>) normalPlay,
     (DeckOfCards<CardRegistry>) dummyCards,
+
+    (float) goToPosition_far,
+    (float) goToPosition_near,
     }),
 });
 
@@ -122,7 +125,7 @@ class ReadyCard : public ReadyCardBase
       {
         
         theLookLeftAndRightSkill();
-        theWalkToTargetPathPlannerSkill(Pose2f(0.8f,0.8f,0.8f), theLibCheck.myReadyPosition());
+        theWalkToTargetPathPlannerSkill(Pose2f(goToPosition_far,goToPosition_far,goToPosition_far), theLibCheck.myReadyPosition());
         }
     }//end of goToPosition
 
@@ -143,7 +146,7 @@ class ReadyCard : public ReadyCardBase
 
       }action{
         theLookLeftAndRightSkill();
-        theWalkToTargetPathPlannerStraightSkill(Pose2f(0.5f,0.5f,0.5f), theLibCheck.myReadyPosition());
+        theWalkToTargetPathPlannerStraightSkill(Pose2f(goToPosition_near,goToPosition_near,goToPosition_near), theLibCheck.myReadyPosition());
       }
     }
 

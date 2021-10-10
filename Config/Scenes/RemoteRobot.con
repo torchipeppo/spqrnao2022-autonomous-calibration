@@ -1,6 +1,3 @@
-# connect to a robot
-call Includes/connectDialog Includes/connect
-
 # all views are defined in other scripts
 call Includes/JPEGImageViews
 call Includes/FieldViews1
@@ -15,3 +12,7 @@ jc press 3 call Includes/Joystick
 jc press 4 call Includes/Joystick
 
 echo mr JPEGImage off
+
+# connect to a robot
+call Includes/connectDialog
+call Includes/Views

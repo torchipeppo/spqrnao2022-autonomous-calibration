@@ -267,9 +267,9 @@ class DefenderCard : public DefenderCardBase
                                     yOffset, //offsetY
                                     false,  // useLeftFoot
                                     2.5, //gainWhenBallOnSide
-                                    30, //forwardThreshold
-                                    80, //sidewaysThreshold
-                                    30); //rotationThreshold
+                                    100, //forwardThreshold
+                                    100, //sidewaysThreshold
+                                    50); //rotationThreshold
       }
     }
     state(searchForBall)
