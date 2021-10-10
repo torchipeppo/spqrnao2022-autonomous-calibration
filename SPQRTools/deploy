@@ -1,0 +1,59 @@
+#! /bin/bash
+
+# Usage: ./deploy <compile_mode> <network_type> <additional_parameters_for_copyfiles>
+
+FORM_FILE="formation.conf"
+COPYFILES="../Make/Linux/copyfiles"
+
+mode=""
+address_prefix=""
+extra=""
+
+if ! [ -f "$FORM_FILE" ]
+then
+    echo "  !!!  NO FORMATION FILE  !!!  "
+fi
+
+case $1 in
+    Debug | debug | dbg | DBG | bug | BUG)
+        mode="Debug"
+        ;;
+    Develop | develop | dev | DEV)
+        mode="Develop"
+        ;;
+    Release | release | rls | RLS | rel | REL)
+        mode="Release"
+        ;;
+    *)
+        echo "  !!!  UNKNOWN COMPILE MODE: $1  !!!  "
+esac
+
+case $2 in
+        eth | ethr | ethernet | lan | cable)
+            address_prefix="192.168.19."
+            ;;
+        wifi | wireless)
+            address_prefix="10.0.19."
+            ;;
+        *)
+            echo "  !!!  UNKNOWN NETWORK TYPE: $2  !!!"
+            ;;
+esac
+
+shift
+shift
+
+extra=$@
+
+# echo "gonna do copyfiles in $mode mode over addresses $address_prefix*"
+# echo "with the following extra params: $extra"
+
+# read each line of the file (file name is at the end, after the "done")
+while IFS= read -r line; do
+  tokenized=( $line )     # splits line over spaces
+  number=${tokenized[0]}
+  ip=${address_prefix}${tokenized[1]}
+  # tokenized[2] is the name, irrelevant
+  # do the copyfiles
+  echo "And the command is $COPYFILES $mode -r $number $ip $extra"
+done < $FORM_FILE
