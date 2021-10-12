@@ -49,11 +49,49 @@ extra=$@
 # echo "with the following extra params: $extra"
 
 # read each line of the file (file name is at the end, after the "done")
+# while IFS= read -r line; do
+#   echo $line
+#   tokenized=( $line )     # splits line over spaces
+#   number=${tokenized[0]}
+#   ip=${address_prefix}${tokenized[1]}
+#   # tokenized[2] is the name, irrelevant
+#   # do the copyfiles
+#   $COPYFILES $mode -r $number $ip $extra
+#   echo "Ummmm"
+# done < $FORM_FILE
+
+
+# full_form=$(<$FORM_FILE)
+# echo $full_form
+# lines=$(echo $full_form | tr " " "-")
+# echo $lines
+# readarray -t lines <<<"$full_form"
+# for line in $lines; do
+#     # echo $line
+#     line=$(echo $line | tr "-" " ")
+#     # echo $line
+#     tokenized=( $line )     # splits line over spaces
+#     number=${tokenized[0]}
+#     ip=${address_prefix}${tokenized[1]}
+#     # tokenized[2] is the name, irrelevant
+#     # do the copyfiles
+#     $COPYFILES $mode -r $number $ip $extra
+# done
+
+# follow a convoluted path b/c this is the only way I could make it work
+# prepare array of quoted strings
+declare -a lines
 while IFS= read -r line; do
+  lines+=("$line")
+done < $FORM_FILE
+
+# make one copyfiles per line
+for line in "${lines[@]}"; do
+  echo $line
   tokenized=( $line )     # splits line over spaces
   number=${tokenized[0]}
   ip=${address_prefix}${tokenized[1]}
   # tokenized[2] is the name, irrelevant
   # do the copyfiles
   $COPYFILES $mode -r $number $ip $extra
-done < $FORM_FILE
+done
