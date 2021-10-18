@@ -3,6 +3,30 @@
 # Usage: ./form <robot no.1> <robot no.2> ... <robot no.N> [-c <args for ./deploy>]
 # Produces: formation.conf file to be read by other scripts, formation.txt file for humans
 
+help()
+{
+    echo "Usage: form <robot no. 1> <robot no. 2> ... <robot no. 5> [-c <args for deploy>]"
+    echo
+    echo "Supported naming conventions for the robots:"
+    echo " - Last byte of the IP: 16, 17, ..., 21"
+    echo " - Imperial name: Augusto, Caligola, ..., Nerone"
+    echo " - Cryptographical/Alphabetical name: Alice, Bob, Carol, David, Eve, Frank"
+    echo " - Alphabetical letter: A, B, ..., F"
+    echo " - Letter correspoding to IP byte: P, Q, ..., U"
+    echo "All names are recognized whether the initial is upper- or lowercase."
+    echo
+    echo "Given formation is saved to formation.conf."
+    echo
+    echo "Use -c (or equivalently -d, --copyfiles, --deploy) to immediately deploy the given formation. Everything that follows the option is given as argument to the deploy script, see its documentaion for details."
+}
+
+# check if arg is help or script was called w/ no arg
+if [[ $1 == "-h" ]] || [[ $1 == "--help" ]] || [ -z $1 ]
+then
+    help
+    exit 0
+fi
+
 FORM_FILE="formation.conf"
 # FORM_HUMAN_FILE="formation.txt"
 FORM_BAK_FILE="formation.conf.BAK"
@@ -33,42 +57,42 @@ while true ; do
         "")
             break
             ;;
-        16 | Augusto | Alice | A | P |Tower)
+        16 | Augusto | augusto | Alice | alice | A | a | P | p | Tower | tower)
             echo "Augusto is no. $number"
             # echo "$number 16" >> $FORM_FILE
             # echo "$number 16 Augusto" >> $FORM_HUMAN_FILE
             echo "$number 16 Augusto" >> $FORM_FILE
             (( number += 1 ))
             ;;
-        17 | Caligola | Bob | B | Q | Star)
+        17 | Caligola | caligola | Bob | bob | B | b | Q | q | Star | star)
             echo "Caligola is no. $number"
             # echo "$number 17" >> $FORM_FILE
             # echo "$number 17 Caligola" >> $FORM_HUMAN_FILE
             echo "$number 17 Caligola" >> $FORM_FILE
             (( number += 1 ))
             ;;
-        18 | Cesare | Carol | C | R | Moon)
+        18 | Cesare | cesare | Carol | carol | C | c | R | r | Moon | moon)
             echo "Cesare is no. $number"
             # echo "$number 18" >> $FORM_FILE
             # echo "$number 18 Cesare" >> $FORM_HUMAN_FILE
             echo "$number 18 Cesare" >> $FORM_FILE
             (( number += 1 ))
             ;;
-        19 | Claudio | David | D | S | Sun)
+        19 | Claudio | claudio | David | david | D | d | S | s | Sun | sun)
             echo "Claudio is no. $number"
             # echo "$number 19" >> $FORM_FILE
             # echo "$number 19 Claudio" >> $FORM_HUMAN_FILE
             echo "$number 19 Claudio" >> $FORM_FILE
             (( number += 1 ))
             ;;
-        20 | Nerone | Eve | E | T | Judgement)
+        20 | Nerone | nerone | Eve | eve | E | e | T | t | Judgement | judgement)
             echo "Nerone is no. $number"
             # echo "$number 20" >> $FORM_FILE
             # echo "$number 20 Nerone" >> $FORM_HUMAN_FILE
             echo "$number 20 Nerone" >> $FORM_FILE
             (( number += 1 ))
             ;;
-        21 | Tiberio | Frank | F | U | World)
+        21 | Tiberio | tiberio | Frank | frank | F | f | U | u | World | world)
             echo "Tiberio is no. $number"
             # echo "$number 21" >> $FORM_FILE
             # echo "$number 21 Tiberio" >> $FORM_HUMAN_FILE
@@ -81,6 +105,9 @@ while true ; do
             ./deploy $@
             break
             ;;
+        *)
+            printf "  !!!  Unrecogized robot name or option: %s  !!!" $1
+            echo "Use -h to see usage and supported names."
     esac
     shift
 
