@@ -7,6 +7,7 @@
 #include "ECImageProvider.h"
 #include "Tools/Global.h"
 #include <asmjit/asmjit.h>
+#include <iostream>
 
 MAKE_MODULE(ECImageProvider, perception)
 
@@ -31,9 +32,11 @@ void ECImageProvider::update(ECImage& ecImage)
         compileEC();
 
       // There may be faster ways to copy the colors.
-      if(theFieldColors.maxNonColorSaturation != currentMaxNonColorSaturation[0])
+      if(theFieldColors.maxNonColorSaturation != currentMaxNonColorSaturation[0]) {
+        std::cout << "ZAN ZANma ZANdyne" << std::endl;
         for(size_t i = 0; i < 16; i++)
           currentMaxNonColorSaturation[i] = theFieldColors.maxNonColorSaturation;
+      }
       if(theFieldColors.blackWhiteDelimiter != currentBlackWhiteDelimiter[0])
         for(size_t i = 0; i < 16; i++)
           currentBlackWhiteDelimiter[i] = theFieldColors.blackWhiteDelimiter;
