@@ -92,7 +92,6 @@ struct RegisteredPercepts
 class PerceptRegistration
 {
 private:
-
   const CameraInfo& theCameraInfo;
   const CameraMatrix& theCameraMatrix;
   const CirclePercept& theCirclePercept;
@@ -132,7 +131,6 @@ private:
     Vector2f dir; /**< The normalized direction of the line (from starting point). */
     float length; /**< The length of the line. */
     bool isLong;  /**< The line is longer than the penalty area width */
-    bool isShort;
     bool vertical; /**< Whether this is a vertical or horizontal line. */
   };
 
@@ -159,7 +157,6 @@ private:
   Matrix2f circlePerceptCovariance;
   std::vector<Matrix2f> lineCovariances;
   std::vector<Matrix2f> intersectionCovariances;
-  
   unsigned int lastGoalPostCovarianceUpdate;
   unsigned int lastPenaltyMarkCovarianceUpdate;
   unsigned int lastCirclePerceptCovarianceUpdate;

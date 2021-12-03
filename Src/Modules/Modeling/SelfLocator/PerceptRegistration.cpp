@@ -9,11 +9,9 @@
 
 #include "PerceptRegistration.h"
 #include "Tools/Debugging/DebugDrawings.h"
-#include "Tools/Debugging/DebugDrawings3D.h"
 #include "Tools/Math/Transformation.h"
 #include "Tools/Modeling/Measurements.h"
 #include "Tools/Modeling/UKFPose2D.h"
-#include <iostream>
 
 PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const CameraMatrix& cameraMatrix,
     const CirclePercept& circlePercept,
@@ -61,7 +59,7 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
   goalPosts[1] = Vector2f(theFieldDimensions.xPosOwnGoalPost, theFieldDimensions.yPosLeftGoal);
   goalPosts[2] = Vector2f(theFieldDimensions.xPosOpponentGoalPost, theFieldDimensions.yPosLeftGoal);
   goalPosts[3] = Vector2f(theFieldDimensions.xPosOpponentGoalPost, theFieldDimensions.yPosRightGoal);
-  penaltyAreaWidth = 2.f * std::abs(theFieldDimensions.yPosLeftGoalBox);
+  penaltyAreaWidth = 2.f * std::abs(theFieldDimensions.yPosLeftPenaltyArea);
   goalAcceptanceThreshold = (2.f * theFieldDimensions.yPosLeftGoal) / 3.f;
 
   // Initialize penalty marks
@@ -80,20 +78,14 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
       relevantFieldLine.dir = relevantFieldLine.end - relevantFieldLine.start;
       relevantFieldLine.dir.normalize();
       relevantFieldLine.length = (fieldLine.to - fieldLine.from).norm();
-      relevantFieldLine.isLong = relevantFieldLine.length > penaltyAreaWidth + 50.f;
-      relevantFieldLine.isShort = relevantFieldLine.length < penaltyAreaWidth - 50.f;
+      relevantFieldLine.isLong = relevantFieldLine.length > penaltyAreaWidth;
       relevantFieldLine.vertical = std::abs(fieldLine.from.y() - fieldLine.to.y()) < 0.001f;
-
-      if(relevantFieldLine.vertical){
+      if(relevantFieldLine.vertical)
         verticalFieldLines.push_back(relevantFieldLine);
-        //std::cout << "# verticalFieldLines = " << verticalFieldLines.size() << ", from: " << relevantFieldLine.start << ", to: " << relevantFieldLine.end << std::endl;
-      } else {
+      else
         horizontalFieldLines.push_back(relevantFieldLine);
-        //std::cout << "# horizontalFieldLines = " << horizontalFieldLines.size() << ", from: " << relevantFieldLine.start << ", to: " << relevantFieldLine.end << std::endl;
-      }
     }
   }
-
   if(goalFrameIsPerceivedAsLines)
   {
     for(size_t i = 0, count = theFieldDimensions.goalFrameLines.lines.size(); i < count; ++i)
@@ -105,8 +97,7 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
       relevantFieldLine.dir = relevantFieldLine.end - relevantFieldLine.start;
       relevantFieldLine.dir.normalize();
       relevantFieldLine.length = (fieldLine.to - fieldLine.from).norm();
-      relevantFieldLine.isLong = relevantFieldLine.length > penaltyAreaWidth + 50.f;
-      relevantFieldLine.isShort = relevantFieldLine.length < penaltyAreaWidth - 50.f;
+      relevantFieldLine.isLong = relevantFieldLine.length > penaltyAreaWidth;
       relevantFieldLine.vertical = std::abs(fieldLine.from.y() - fieldLine.to.y()) < 0.001f;
       if(relevantFieldLine.vertical)
         verticalFieldLines.push_back(relevantFieldLine);
@@ -114,7 +105,6 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
         horizontalFieldLines.push_back(relevantFieldLine);
     }
   }
-
   // Search center line in list of all lines:
   centerLine = 0;
   for(auto& fieldLine : horizontalFieldLines)
@@ -140,12 +130,6 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
   tIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGroundline, theFieldDimensions.yPosRightPenaltyArea));
   tIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGroundline, theFieldDimensions.yPosLeftPenaltyArea));
   tIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGroundline, theFieldDimensions.yPosRightPenaltyArea));
-
-  tIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGroundline, theFieldDimensions.yPosLeftGoalBox));
-  tIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGroundline, theFieldDimensions.yPosRightGoalBox));
-  tIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGroundline, theFieldDimensions.yPosLeftGoalBox));
-  tIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGroundline, theFieldDimensions.yPosRightGoalBox));
-
   // L
   lIntersections = tIntersections;
   lIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGroundline, theFieldDimensions.yPosRightSideline));
@@ -156,12 +140,6 @@ PerceptRegistration::PerceptRegistration(const CameraInfo& cameraInfo, const Cam
   lIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnPenaltyArea, theFieldDimensions.yPosLeftPenaltyArea));
   lIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentPenaltyArea, theFieldDimensions.yPosRightPenaltyArea));
   lIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentPenaltyArea, theFieldDimensions.yPosLeftPenaltyArea));
-
-  lIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGoalBox, theFieldDimensions.yPosRightGoalBox));
-  lIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGoalBox, theFieldDimensions.yPosLeftGoalBox));
-  lIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGoalBox, theFieldDimensions.yPosRightGoalBox));
-  lIntersections.push_back(Vector2f(theFieldDimensions.xPosOpponentGoalBox, theFieldDimensions.yPosLeftGoalBox));
-
   if(goalFrameIsPerceivedAsLines)
   {
     lIntersections.push_back(Vector2f(theFieldDimensions.xPosOwnGoal, theFieldDimensions.yPosLeftGoal));
@@ -188,7 +166,6 @@ void PerceptRegistration::update(const Pose2f& theRobotPose, RegisteredPercepts&
     lineCovarianceUpdates.resize(theFieldLines.lines.size(), 0);
     lineCovariances.resize(theFieldLines.lines.size());
   }
-
   if(theFieldLineIntersections.intersections.size() > intersectionCovarianceUpdates.size())
   {
     intersectionCovarianceUpdates.resize(theFieldLineIntersections.intersections.size(), 0);
@@ -207,7 +184,6 @@ void PerceptRegistration::update(const Pose2f& theRobotPose, RegisteredPercepts&
 
 int PerceptRegistration::registerPoses(std::vector<RegisteredPose>& poses)
 {
-
   return registerPose(poses, theMidCircle) +
          registerPose(poses, theMidCorner) +
          registerPose(poses, theGoalFrame) +
@@ -264,7 +240,6 @@ bool PerceptRegistration::pickPoseFromFieldFeature(const Pose2f& robotPose, cons
 int PerceptRegistration::registerLandmarks(std::vector<RegisteredLandmark>& landmarks)
 {
   int numOfLandmarks(0);
-
   if(thePenaltyMarkPercept.wasSeen)
   {
     Vector2f penaltyMarkInWorld;
@@ -283,7 +258,6 @@ int PerceptRegistration::registerLandmarks(std::vector<RegisteredLandmark>& land
     }
     numOfLandmarks++;
   }
-
   if(theCirclePercept.wasSeen && !theMidCircle.isValid)
   {
     const Vector2f circleInWorld = robotPose * theCirclePercept.pos;
@@ -316,7 +290,6 @@ int PerceptRegistration::registerLandmarks(std::vector<RegisteredLandmark>& land
     }
     numOfLandmarks++;
   }
-
   // If we detected some of the special corner constellations (which will be used differently),
   // we do not need any of the "normal" intersections anymore.
   if(!theGoalFrame.isValid && !theMidCorner.isValid && !theOuterCorner.isValid && !thePenaltyArea.isValid)
@@ -349,9 +322,7 @@ int PerceptRegistration::registerLines(std::vector<RegisteredLine>& lines)
   // If we have some of the high level percepts, do not register the low level ones
   if(theGoalFrame.isValid || theMidCorner.isValid || theOuterCorner.isValid || thePenaltyArea.isValid || theMidCircle.isValid)
     return 0;
-  DECLARE_DEBUG_DRAWING3D("module:PerceptRegistration:tumadre", "robot");
-  TRANSLATE3D("module:PerceptRegistration:tumadre", 0, 0, -210);
-  COMPLEX_DRAWING3D("module:PerceptRegistration:tumadre")
+
   // Iterate over all observed lines:
   for(unsigned int i = 0; i < theFieldLines.lines.size(); ++i)
   {
@@ -368,13 +339,9 @@ int PerceptRegistration::registerLines(std::vector<RegisteredLine>& lines)
       newLine.wStart    = (*fieldLine).start;
       newLine.wEnd      = (*fieldLine).end;
       newLine.vertical  = (*fieldLine).vertical;
-      //std::cout << "HO REGISTRATO UNA LINEA\n";
-      LINE3D("module:PerceptRegistration:tumadre", line.first.x(), line.first.y(), 0, line.last.x(), line.last.y(), 0, 3, ColorRGBA::cyan);
-      //CROSS("module:PerceptRegistration:tumadre", circle.fieldSpots.back().x(), circle.fieldSpots.back().y(), 5, 2, Drawings::solidPen, ColorRGBA::black);
       if(lineCovarianceUpdates[i] < theFrameInfo.time)
       {
-	// TODO LOCALIZATION DA VERIFICARE 1.5 * NON C'ERA
-        lineCovariances[i] = 1.5 * Measurements::positionToCovarianceMatrixInRobotCoordinates(newLine.pCenter, 0.f, theCameraMatrix, inverseCameraMatrix, currentRotationDeviation);
+        lineCovariances[i] = Measurements::positionToCovarianceMatrixInRobotCoordinates(newLine.pCenter, 0.f, theCameraMatrix, inverseCameraMatrix, currentRotationDeviation);
         lineCovarianceUpdates[i] = theFrameInfo.time;
         // Reduce covariance, if line is long and horizontal:
         if(lineIsLongAndHorizontalInImage(newLine))
@@ -394,16 +361,8 @@ bool PerceptRegistration::getAssociatedIntersection(const FieldLineIntersections
     corners = &tIntersections;
   else if(intersection.type == FieldLineIntersections::Intersection::X)
     corners = &xIntersections;
-
   const Vector2f pointWorld = robotPose * intersection.pos;
   const float sqrThresh = intersectionAssociationDistance * intersectionAssociationDistance;
-  /*
-  if(corners->size() <=0 )
-    return false;
-  float best_ass = (pointWorld - corners->at(0)).squaredNorm();
-  int best_index = 0;
-  bool found = false;
-  */
   for(unsigned int i = 0; i < corners->size(); ++i)
   {
     const Vector2f& c = corners->at(i);
@@ -414,18 +373,6 @@ bool PerceptRegistration::getAssociatedIntersection(const FieldLineIntersections
       return true;
     }
   }
-    /*
-    if((pointWorld - c).squaredNorm() < sqrThresh && (pointWorld - c).squaredNorm() <= best_ass){
-      best_ass = (pointWorld - c).squaredNorm();
-      best_index = i;
-      found = true;
-    }
-  }
-  if(found){
-    associatedIntersection = corners->at(best_index);
-    return true;
-  }
-  */
   return false;
 }
 
@@ -464,10 +411,7 @@ const PerceptRegistration::FieldLine* PerceptRegistration::getPointerToAssociate
   const Vector2f orthogonalOnField(dirOnField.y(), -dirOnField.x());
   bool isVertical = std::abs(dirOnField.x()) > std::abs(dirOnField.y());
   const float lineLength = (start - end).norm();
-
-  const bool perceivedLineIsLong = lineLength > penaltyAreaWidth + 50.f;
-  const bool perceivedLineIsShort = lineLength < penaltyAreaWidth - 50.f;
-
+  const bool perceivedLineIsLong = lineLength > penaltyAreaWidth;
   // Throw away lines on center circle (as they are currently not in the field lines)
   // To save computing time, do check for lines of up to medium length, only.
   // To avoid deleting short penalty area side lines, only consider lines that start somewhere near the field center
@@ -475,13 +419,11 @@ const PerceptRegistration::FieldLine* PerceptRegistration::getPointerToAssociate
      || end.norm() < 2.f * theFieldDimensions.centerCircleRadius) &&
      lineCouldBeOnCenterCircle(startOnField, dirOnField))
     return nullptr;
-
   // Throw away short lines before kickoff (false positives on center circle that are confused with the center line)
   // when the other team has kickoff
   if(lineLength < 1000.f && iAmBeforeKickoffInTheCenterOfMyHalfLookingForward() &&
      theGameInfo.kickingTeam != theOwnTeamInfo.teamNumber)
     return nullptr;
-
   const float sqrLineAssociationCorridor     = sqr(lineAssociationCorridor);
   const float sqrLongLineAssociationCorridor = sqr(longLineAssociationCorridor);
   Vector2f intersection;
@@ -490,32 +432,25 @@ const PerceptRegistration::FieldLine* PerceptRegistration::getPointerToAssociate
   for(unsigned int i = 0; i < fieldLines.size(); ++i)
   {
     const FieldLine& fieldLine = fieldLines[i];
-
     if(lineLength > 1.3f * fieldLine.length)
       continue;
-
     const float currentSqrCorridor = (fieldLine.isLong && perceivedLineIsLong) ? sqrLongLineAssociationCorridor : sqrLineAssociationCorridor;
-
     if(getSqrDistanceToLine(fieldLine.start, fieldLine.dir, fieldLine.length, startOnField) > currentSqrCorridor ||
        getSqrDistanceToLine(fieldLine.start, fieldLine.dir, fieldLine.length, endOnField) > currentSqrCorridor)
       continue;
-
     if(!intersectLineWithLine(startOnField, orthogonalOnField, fieldLine.start, fieldLine.dir, intersection))
       continue;
     if(getSqrDistanceToLine(startOnField, dirOnField, intersection) > currentSqrCorridor)
       continue;
-
     if(!intersectLineWithLine(endOnField, orthogonalOnField, fieldLine.start, fieldLine.dir, intersection))
       continue;
     if(getSqrDistanceToLine(startOnField, dirOnField, intersection) > currentSqrCorridor)
       continue;
-
     // Exlude potential short lines on the center circle that might become associated to the center line,
     if(lineLength < minimumLineLengthForAssociationToLongHorizontalLine &&
        theCameraInfo.camera == CameraInfo::upper &&
        fieldLine.isLong && !fieldLine.vertical && fieldLine.start.x() == 0.f)
       continue;
-
     return &(fieldLines[i]);
   }
 
