@@ -1,28 +1,28 @@
 #include "FieldColorsCalibrator.h"
 #include "Tools/Debugging/Debugging.h"
+#include "Platform/SystemCall.h"
+#include "Tools/Module/Module.h"
+#include <iostream>
 
 MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
 int nextArcana = 0;
 bool breakCalibration = false;
+bool loaded = false;
 
 void FieldColorsCalibrator::update(FieldColors& fc) {
+  // start with the initial guess provided in the cfg (for now, at least)
+  if (!loaded) {
+    loadModuleParameters(fc, "FieldColors", nullptr);
+    loaded=true;
+  }
+
   // a needlessly complicated hello world
-  // DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:answerToLife")
-  // {
-  //   OUTPUT_TEXT("The answer to life is riding on an infinite blue elevator all the way to the top.");
-  //   OUTPUT_TEXT("A man with a large nose and becoming a door may or may not be involved.");
-  //   OUTPUT_TEXT("...What? Need something more quantitative? Oh well...");
-  //   int ans = 0;
-  //   ans += 6;
-  //   ans *= 2;
-  //   ans += 100 / 10 * 3;
-  //   OUTPUT_TEXT("And the answer is:");
-  //   OUTPUT_TEXT(ans);
-  // }
   DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:arcana")
   {
     OUTPUT_TEXT("The Arcana is the means by which all is revealed.");
+    SystemCall::say("The Arcana is the means by which all is revealed.");
+    std::cout << "The Arcana is the means by which all is revealed." << std::endl;
     switch (nextArcana) {
       case 0: OUTPUT_TEXT("The beginning of the journey is full of possibilities."); break;
       case 1: OUTPUT_TEXT("Birth is a miracle. Beware of illusions."); break;
@@ -46,8 +46,6 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
 
   DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:breakCalibration")
   {
-    // fc.blackWhiteDelimiter = 32;
-    // fc.maxNonColorSaturation = 64;
     breakCalibration = true;
   }
 
@@ -56,7 +54,7 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
     fc.maxNonColorSaturation = 0;
     fc.fieldHue.min = 255;
     fc.fieldHue.max = 255;
-    OUTPUT_TEXT("Kaboom");
+    OUTPUT_TEXT("NAO is affected by Blindness!");
     breakCalibration = false;
   }
 }
