@@ -1,8 +1,12 @@
 /**
  * Implementation file for module FieldColorsCalibrator.
  * 
+ * This is only executed on the Lower thread, so there are no concurrency issues.
+ * 
  * @author Francesco Petri
  */
+
+//NOTE: If we ever need it, the CameraInfo representation knows which camera this instance of the module is working on.
 
 //disabling warnings while importing so I don't see irrelevant messages when compiling
 #pragma GCC diagnostic push
@@ -13,6 +17,7 @@
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 #include "FieldColorsCalibrator.h"
+#include "FieldColorsGenome.h"
 #include "Tools/Debugging/Debugging.h"
 #include "Platform/SystemCall.h"
 #include "Tools/Module/Module.h"
@@ -23,38 +28,99 @@
 //see above
 #pragma GCC diagnostic pop
 
+// shorthands
+typedef std::vector<Genome> Crowd;
+typedef std::pair<Genome, Genome> Couple;
+
 MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
 bool loaded = false;
 bool breakCalibration = false;
 bool calibrating = false;
 
-std::vector<Genome> population;
+Crowd population;
+unsigned generation = 0;
 
 void FieldColorsCalibrator::initCalibration() {
   OUTPUT_TEXT("Beginning color calibration");
   SystemCall::say("Beginning color calibration");
   std::cout << "Beginning color calibration" << std::endl;
 
+  // initialize RNG
+  srand((unsigned) time(NULL));
+
   // initialize population at random
   population.clear();
-  srand((unsigned) time(NULL));
   for (unsigned i=0; i<POPULATION_SIZE; i++) {
-    population.emplace_back(Genome::random());
+    population.push_back(Genome::random());
   }
 
-  // if the Upper and Lower threads are ACTUAL threads, then I should have serious concurrency problems here,
-  // and end up w/ a size that's neither POPULATION_SIZE nor 2*POPULATION_SIZE.
-  std::cout << population.size() << " little genomes, first: " << population[0].color_delimiter << std::endl;
-  // And in fact we DO get concurrency issues! But only if also calibrationStep does something!
+  // start counting
+  generation = 0;
 
   // notify the update loop that calibration has begun
   calibrating = true;
 }
 
+/**
+ * Select ONE PAIR of parents, based on fitness.
+ */
+Couple select(Crowd population) {
+  //TODOOOOO
+  return Couple(population[0], population[1]);
+}
+
+/**
+ * Perform crossover... (details depend on implementation)
+ */
+Couple crossover(Couple parents) {
+  //TODOOOOO
+  return parents;
+}
+
+/**
+ * Mutate both children... (details depend on implementation)
+ */
+Couple mutate(Couple children) {
+  //TODOOOOO
+  return children;
+}
+
+/**
+ * Pick the best POPULATION_SIZE individuals
+ * of the parent and children populations together
+ * to survive to the next generation.
+ */
+Crowd pick_elite(Crowd oldpop, Crowd newpop) {
+  // TODOOOOOO
+  return newpop;
+}
+
+/**
+ * Perform one iteration of the genetic algorithm.
+ */
 void FieldColorsCalibrator::calibrationStep() {
-  // testing if the population array is shared b/w threads or not
-  std::cout << "And the first is: " << population[0].color_delimiter << std::endl;
+  // advance to next generation
+  generation++;
+  if (generation > MAX_GENERATIONS) {
+    SystemCall::say("Generation limit exceeded. Color calibration terminated.");
+    OUTPUT_TEXT("Generation limit exceeded. Color calibration terminated.");
+    calibrating = false;
+    return;
+  }
+
+  Crowd child_population;
+  for (unsigned i=0; i<POPULATION_SIZE/2; i++) {
+    Couple parents = select(population);
+    Couple children = crossover(parents);
+    Couple mutated = mutate(children);
+    child_population.push_back(mutated.first);
+    child_population.push_back(mutated.second);
+  }
+
+  population = pick_elite(population, child_population);
+
+  // TODO report of some kind
 }
 
 /**
