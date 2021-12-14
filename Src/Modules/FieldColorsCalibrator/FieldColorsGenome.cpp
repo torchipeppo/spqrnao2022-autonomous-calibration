@@ -7,27 +7,25 @@
 #include "FieldColorsGenome.h"
 #include <stdlib.h>
 
-unsigned short clamp(unsigned short n) {
-  const unsigned short t = n < 0 ? 0 : n;
+unsigned char clamp(unsigned char n) {
+  const unsigned char t = n < 0 ? 0 : n;
   return t > 255 ? 255 : t;
 }
 
-Genome::Genome(unsigned short cdel, unsigned short fmin, unsigned short fmax, unsigned short bwdl) {
+Genome::Genome(unsigned char cdel, unsigned char fmin, unsigned char fmax, unsigned char bwdl) {
   color_delimiter = cdel;
   field_min = fmin;
   field_max = fmax;
   black_white_delimiter = bwdl;
   validateParams();
-  fitness = evalFitness();
 }
 
 Genome::Genome() {
-  color_delimiter = rand() % 256;
-  field_min = rand() % 256;
-  field_max = rand() % 256;
-  black_white_delimiter = rand() % 256;
+  color_delimiter = (unsigned char) (rand() % 256);
+  field_min = (unsigned char) (rand() % 256);
+  field_max = (unsigned char) (rand() % 256);
+  black_white_delimiter = (unsigned char) (rand() % 256);
   validateParams();
-  fitness = evalFitness();
 }
 
 Genome Genome::random() {
@@ -40,13 +38,16 @@ void Genome::validateParams() {
   field_max = clamp(field_max);
   black_white_delimiter = clamp(black_white_delimiter);
   if (field_min > field_max) {
-    const unsigned short actually_max = field_min;
+    const unsigned char actually_max = field_min;
     field_min = field_max;
     field_max = actually_max;
   }
 }
 
-int Genome::evalFitness() {
+// HIGH fitness wins.
+// For now, it's just the number of green pixels in the image.
+// May change in the future, but I prefer sth simple to get the whole algorithm running first.
+int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage) {
   // TODOOOOOOOOO
   return 0;
 }

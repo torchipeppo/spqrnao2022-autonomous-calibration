@@ -17,7 +17,6 @@
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 #include "FieldColorsCalibrator.h"
-#include "FieldColorsGenome.h"
 #include "Tools/Debugging/Debugging.h"
 #include "Platform/SystemCall.h"
 #include "Tools/Module/Module.h"
@@ -28,17 +27,17 @@
 //see above
 #pragma GCC diagnostic pop
 
-// shorthands
-typedef std::vector<Genome> Crowd;
-typedef std::pair<Genome, Genome> Couple;
-
 MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
 bool loaded = false;
 bool breakCalibration = false;
 bool calibrating = false;
 
+FieldColorsCalibrator::CalibrationState state = FieldColorsCalibrator::CalibrationState::Off;
+int fitnessIndex = -1;
+
 Crowd population;
+Crowd child_population;
 unsigned generation = 0;
 
 void FieldColorsCalibrator::initCalibration() {
@@ -60,6 +59,31 @@ void FieldColorsCalibrator::initCalibration() {
 
   // notify the update loop that calibration has begun
   calibrating = true;
+  state = CalibrationState::InitFitness;
+  fitnessIndex = -1;
+}
+
+// evaluate the fitness of one genome per update cycle
+void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, const Crowd &popul, const CalibrationState &nextState) {
+  // evaluate current genome
+  if (fitnessIndex >= 0) {
+    Genome g = popul[fitnessIndex];
+    g.fitness = g.evalFitness(theECImage.colored);
+  }
+
+  // set the color thresholds of the next genome, so in the next update cycle the image will be segmented accordingly
+  fitnessIndex++;
+  if (fitnessIndex < (int) POPULATION_SIZE) {
+    Genome g = popul[fitnessIndex];
+    fc.maxNonColorSaturation = g.color_delimiter;
+    fc.blackWhiteDelimiter = g.black_white_delimiter;
+    fc.fieldHue.min = g.field_min;
+    fc.fieldHue.max = g.field_max;
+  }
+  else {
+    // fitness evaluation terminated
+    state = nextState;
+  }
 }
 
 /**
@@ -98,7 +122,6 @@ Crowd pick_elite(Crowd oldpop, Crowd newpop) {
 
 /**
  * Perform one iteration of the genetic algorithm.
- */
 void FieldColorsCalibrator::calibrationStep() {
   // advance to next generation
   generation++;
@@ -107,6 +130,12 @@ void FieldColorsCalibrator::calibrationStep() {
     OUTPUT_TEXT("Generation limit exceeded. Color calibration terminated.");
     calibrating = false;
     return;
+  }
+
+  // compute everyone's fitness
+  // (may change from previous generation, since the perceived image may have)
+  for (Genome g : population) {
+    g.fitness = g.evalFitness(theECImage.colored);
   }
 
   Crowd child_population;
@@ -118,6 +147,42 @@ void FieldColorsCalibrator::calibrationStep() {
     child_population.push_back(mutated.second);
   }
 
+  // compute children's fitness too
+  for (Genome g : child_population) {
+    g.fitness = g.evalFitness(theECImage.colored);
+  }
+
+  population = pick_elite(population, child_population);
+
+  // TODO report of some kind
+}
+*/
+
+void FieldColorsCalibrator::calibrationSpawningStep() {
+  // advance to next generation
+  generation++;
+  if (generation > MAX_GENERATIONS) {
+    SystemCall::say("Generation limit exceeded. Color calibration terminated.");
+    OUTPUT_TEXT("Generation limit exceeded. Color calibration terminated.");
+    calibrating = false;
+    return;
+  }
+
+  child_population.clear();
+  for (unsigned i=0; i<POPULATION_SIZE/2; i++) {
+    Couple parents = select(population);
+    Couple children = crossover(parents);
+    Couple mutated = mutate(children);
+    child_population.push_back(mutated.first);
+    child_population.push_back(mutated.second);
+  }
+
+  // initiate children's fitness evaluation
+  state = CalibrationState::ChildrenFitness;
+  fitnessIndex = -1;
+}
+
+void FieldColorsCalibrator::calibrationGenWrapupStep() {
   population = pick_elite(population, child_population);
 
   // TODO report of some kind
@@ -172,6 +237,23 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
 
   // Calibrate
   if (calibrating) {
-    calibrationStep();
+    // calibrationStep();
+    switch (state) {
+      case CalibrationState::Init:
+        // nothing, initCalibration is called in the debug response event right now
+        break;
+      case CalibrationState::InitFitness:
+        calibrationFitnessStep(fc, population, CalibrationState::Spawning);
+        break;
+      case CalibrationState::Spawning:
+        calibrationSpawningStep();
+        break;
+      case CalibrationState::ChildrenFitness:
+        calibrationFitnessStep(fc, child_population, CalibrationState::GenWrapup);
+        break;
+      case CalibrationState::GenWrapup:
+        calibrationGenWrapupStep();
+        break;
+    }
   }
 }
