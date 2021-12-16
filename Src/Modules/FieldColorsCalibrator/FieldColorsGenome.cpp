@@ -6,6 +6,7 @@
 
 #include "FieldColorsGenome.h"
 #include <stdlib.h>
+#include <iostream>
 
 unsigned char clamp(unsigned char n) {
   const unsigned char t = n < 0 ? 0 : n;
@@ -17,6 +18,14 @@ Genome::Genome(unsigned char cdel, unsigned char fmin, unsigned char fmax, unsig
   field_min = fmin;
   field_max = fmax;
   black_white_delimiter = bwdl;
+  validateParams();
+}
+
+Genome::Genome(const Genome &g) {
+  color_delimiter = g.color_delimiter;
+  field_min = g.field_min;
+  field_max = g.field_max;
+  black_white_delimiter = g.black_white_delimiter;
   validateParams();
 }
 
@@ -48,6 +57,18 @@ void Genome::validateParams() {
 // For now, it's just the number of green pixels in the image.
 // May change in the future, but I prefer sth simple to get the whole algorithm running first.
 int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage) {
-  // TODOOOOOOOOO
-  return 0;
+  DEBUG_COUT("    My field is: " << (int) field_min << " " << (int) field_max);
+
+  int green_counter = 0;
+  for (unsigned i=0; i<coloredImage.width; i++) {
+    for (unsigned j=0; j<coloredImage.height; j++) {
+      if (coloredImage[i][j] == FieldColors::field) {
+        green_counter++;
+      }
+    }
+  }
+
+  DEBUG_COUT("    And my fitness is: " << green_counter);
+
+  return green_counter;
 }

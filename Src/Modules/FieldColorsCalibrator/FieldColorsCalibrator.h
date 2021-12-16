@@ -28,19 +28,26 @@
 // shorthands for common types in the .cpp
 typedef std::vector<Genome> Crowd;
 typedef std::pair<Genome, Genome> Couple;
+typedef std::pair<unsigned char, unsigned char> pair_uc;
 
 MODULE(FieldColorsCalibrator,
 {,
   REQUIRES(CameraInfo),
   REQUIRES(CameraImage),
-  REQUIRES(ECImage),
+  USES(ECImage),
   PROVIDES(FieldColors),
 
   LOADS_PARAMETERS(
   {,
     (unsigned) MAX_GENERATIONS,   /** Maximum number of generations before forcefully stopping the search */
     (unsigned) POPULATION_SIZE,   /** Number of genomes in each generation */
+    (unsigned) CHILDPOP_SIZE,     /** Number of children produced each generation. Must be even. */
+
+    (unsigned) TOURNAMENT_SIZE,   /** Number of genomes participating in each selection tournament */
+
     (float) CROSSOVER_CHANCE,     /** Probability of crossover for each parent pair */
+    (float) BLX_ALPHA,            /** Alpha parameter for blend crossover */
+
     (float) MUTATION_CHANCE,      /** Probability of mutation for each child */
     (float) MUTATION_SIGMA,       /** Standard deviation of the Gaussian mutation of each gene */
   }),
@@ -60,10 +67,21 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
   };
 
   void update(FieldColors& fc) override;
+
+  private:
   void initCalibration();
   // void calibrationStep();
 
-  void calibrationFitnessStep(FieldColors &fc, const Crowd &pop, const CalibrationState &nextState);
+  void calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState);
   void calibrationSpawningStep();
   void calibrationGenWrapupStep();
+
+  Couple select();
+  Genome select_tournament();
+  Couple crossover(Couple parents);
+  pair_uc crossover_blend(unsigned char x1, unsigned char x2);
+  Couple mutate(Couple children);
+  Genome mutate_one(Genome child);
+  unsigned char mutate_gaussian(unsigned char x);
+  Crowd combine_allChildrenThenEliteParents(Crowd oldpop, Crowd newpop);
 };

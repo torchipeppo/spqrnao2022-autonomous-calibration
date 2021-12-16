@@ -6,6 +6,8 @@
  * @author Francesco Petri
  */
 
+#pragma once
+
 //disabling warnings while importing so I don't see irrelevant messages when compiling
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
@@ -20,12 +22,25 @@
 //see above
 #pragma GCC diagnostic pop
 
+// debug tools, the Calibrator includes this so they'll be available there as well
+#define DEBUG true
+#define DEBUG_COUT(msg) if (DEBUG) std::cout << msg << std::endl
+
+template <typename T>
+inline T clamp255(T n) {
+  const T x = n < 0 ? 0 : n;
+  return x > 255 ? 255 : x;
+}
+
 class Genome
 {
   public:
 
   // arbitrary constructor
   Genome(unsigned char cdel, unsigned char fmin, unsigned char fmax, unsigned char bwdl);
+
+  // copy constructor
+  Genome(const Genome &g);
 
   // random constructor. Does NOT initialize srand, that will be a responsibility of the caller (i.e. FieldColorsCalibrator)
   Genome();
@@ -47,4 +62,16 @@ class Genome
 
   // computes the fitness of a genome from its parameters.
   int evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage);
+};
+
+// fitness comparators
+struct fitness_lt {
+  inline bool operator()(const Genome &g1, const Genome &g2) const {
+    return g1.fitness < g2.fitness;
+  }
+};
+struct fitness_gt {
+  inline bool operator()(const Genome &g1, const Genome &g2) const {
+    return g1.fitness > g2.fitness;
+  }
 };
