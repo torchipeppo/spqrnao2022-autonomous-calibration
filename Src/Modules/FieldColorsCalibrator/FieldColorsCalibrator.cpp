@@ -29,6 +29,11 @@
 //see above
 #pragma GCC diagnostic pop
 
+// for debugging
+#define FIXED_SEED true
+#define PRINT_FITNESSES(theCrowd) for (Genome& g : theCrowd) {std::cout << g.fitness << " ";} std::cout << std::endl
+                                      // the & is important!
+
 MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
 bool loaded = false;
@@ -51,7 +56,15 @@ void FieldColorsCalibrator::initCalibration() {
   std::cout << "Beginning color calibration" << std::endl;
 
   // initialize RNG
+  #if FIXED_SEED
+  unsigned seed = (unsigned) 14383421;
+  SystemCall::say("with fixed seed");   // fixed seed reminder
+  OUTPUT_TEXT("with fixed seed");
+  // SystemCall::say("Truth had gone, truth had gone, and truth had gone.");   // test this preprocessor thing
+  #else
   unsigned seed = (unsigned) time(NULL);
+  // SystemCall::say("Ah, now truth lies in the darkness of the sinister hand.");   // test this preprocessor thing
+  #endif
   srand(seed);
   generator = std::default_random_engine(seed);
   gaussian = std::normal_distribution<float>(0, MUTATION_SIGMA);
@@ -78,13 +91,13 @@ void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, Crowd &popul
   if (fitnessIndex >= 0) {
     // TODO might be a good idea to NOT recompute fitness for indivisuals from previous generations, since time is precious now
     //      (may not be so necessary, I have already eliminated the double fitness computation)
-    Genome g = popul[fitnessIndex];
-    g.fitness = g.evalFitness(theECImage.colored);
+    Genome *g = &(popul[fitnessIndex]);
+    g->fitness = g->evalFitness(theECImage.colored);
   }
 
   // set the color thresholds of the next genome, so in the next update cycle the image will be segmented accordingly
   fitnessIndex++;
-  if (fitnessIndex < (int) POPULATION_SIZE) {
+  if (fitnessIndex < (int) popul.size()) {
     Genome g = popul[fitnessIndex];
     fc.maxNonColorSaturation = g.color_delimiter;
     fc.blackWhiteDelimiter = g.black_white_delimiter;
@@ -175,6 +188,25 @@ pair_uc FieldColorsCalibrator::crossover_blend(unsigned char x1, unsigned char x
   int lo = x1<x2 ? x1 : x2;
   int hi = x1>=x2 ? x1 : x2;
   int width = hi - lo;
+  // guarantee a minimum width, since this crashes if width==0
+  bool move_lo = true;
+  while (width < BLX_MIN_WIDTH) {
+    if (lo == Genome::MIN && hi < Genome::MAX) {
+      hi++;
+    }
+    else if (hi == Genome::MAX && lo > Genome::MIN) {
+      lo--;
+    }
+    else if (move_lo) {
+      lo--;
+      move_lo = !move_lo;
+    }
+    else {
+      hi++;
+      move_lo = !move_lo;
+    }
+    width = hi - lo;
+  }
   // generate two child genes uniformly in the range [lo - alpha*width, hi + alpha*width]
   lo -= (int) (BLX_ALPHA*(float)width);
   hi += (int) (BLX_ALPHA*(float)width);
@@ -310,10 +342,10 @@ void FieldColorsCalibrator::calibrationGenWrapupStep() {
   std::cout << "Generation " << generation << std::endl;
   std::cout << "    Average fitness: " << average_fitness << std::endl;
   std::cout << "    Best fitness: " << best.fitness << std::endl;
-  std::cout << "    Best genome: " << best.color_delimiter << " ";
-  std::cout << best.field_min << " ";
-  std::cout << best.field_max << " ";
-  std::cout << best.black_white_delimiter << std::endl;
+  std::cout << "    Best genome: " << (int) best.color_delimiter << " ";
+  std::cout << (int) best.field_min << " ";
+  std::cout << (int) best.field_max << " ";
+  std::cout << (int) best.black_white_delimiter << std::endl;
   std::cout << std::endl;
 
   // report to simulator console
@@ -329,10 +361,14 @@ void FieldColorsCalibrator::calibrationGenWrapupStep() {
   OUTPUT_TEXT("-------------------");
 
   // Spoken report
-  line = "Generation " + std::to_string(generation) + "completed";
+  line = "Generation " + std::to_string(generation) + " completed";
   SystemCall::say(line.c_str());
   line = "Best fitness is " + std::to_string(best.fitness);
   SystemCall::say(line.c_str());
+
+
+  // begin next spawning phase
+  state = CalibrationState::Spawning;
 }
 
 /**

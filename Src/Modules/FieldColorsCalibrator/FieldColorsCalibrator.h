@@ -37,6 +37,7 @@ MODULE(FieldColorsCalibrator,
   USES(ECImage),
   PROVIDES(FieldColors),
 
+  // these parameters are defined in a separat configuration file.
   LOADS_PARAMETERS(
   {,
     (unsigned) MAX_GENERATIONS,   /** Maximum number of generations before forcefully stopping the search */
@@ -47,6 +48,7 @@ MODULE(FieldColorsCalibrator,
 
     (float) CROSSOVER_CHANCE,     /** Probability of crossover for each parent pair */
     (float) BLX_ALPHA,            /** Alpha parameter for blend crossover */
+    (int) BLX_MIN_WIDTH,          /** Minimum interval width during blend crossover */
 
     (float) MUTATION_CHANCE,      /** Probability of mutation for each child */
     (float) MUTATION_SIGMA,       /** Standard deviation of the Gaussian mutation of each gene */

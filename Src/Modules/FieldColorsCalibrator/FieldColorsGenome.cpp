@@ -26,6 +26,7 @@ Genome::Genome(const Genome &g) {
   field_min = g.field_min;
   field_max = g.field_max;
   black_white_delimiter = g.black_white_delimiter;
+  fitness = g.fitness;
   validateParams();
 }
 
