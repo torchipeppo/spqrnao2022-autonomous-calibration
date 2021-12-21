@@ -14,7 +14,7 @@
 
     <Compound name="robots">
       <Body ref="Nao" name="robot3">
-        <Translation x="1.0" y="-3" z="320mm"/>
+        <Translation x="0.1" y="-0.6" z="320mm"/>
         <Rotation z="108.43495322058degree"/> 
       </Body>
     </Compound>

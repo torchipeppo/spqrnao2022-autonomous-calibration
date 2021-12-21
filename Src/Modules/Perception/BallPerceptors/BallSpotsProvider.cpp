@@ -3,6 +3,13 @@
  * @author <a href="mailto:jesse@tzi.de">Jesse Richter-Klug</a>
  */
 
+/**
+ * The #ifndef below does not alter the behavior of the normal BallSpotsProvider module,
+ * it only makes it so that the BallSpotsWithoutPreviousGuessProvider module
+ * gets an edited copy of this code.
+ * See that module for extra explanations on this very questionable hack.
+ */
+
 #include "BallSpotsProvider.h"
 #include "Tools/Debugging/DebugDrawings.h"
 #include "Tools/ImageProcessing/InImageSizeCalculations.h"
@@ -18,6 +25,7 @@ void BallSpotsProvider::update(BallSpots& ballSpots)
 
   // Add a prediction based on the previous ball model to the candidates
   ballSpots.firstSpotIsPredicted = false;
+  #ifndef HACK_FOR_CALIBRATION__NO_PREVIOUS_GUESS    // (see big comment above)
   Vector2f predictionInImage;
   if(theFrameInfo.getTimeSince(theWorldModelPrediction.timeWhenBallLastSeen) < 100
      && Transformation::robotToImage(Vector3f(theWorldModelPrediction.ballPosition.x(), theWorldModelPrediction.ballPosition.y(), theBallSpecification.radius), theCameraMatrix, theCameraInfo, predictionInImage))
@@ -31,6 +39,9 @@ void BallSpotsProvider::update(BallSpots& ballSpots)
       ballSpots.addBallSpot(x, y);
     }
   }
+  #else
+  SystemCall::say("World domination is at hand.");
+  #endif
 
   searchScanLines(ballSpots);
 }
