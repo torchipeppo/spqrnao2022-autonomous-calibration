@@ -92,7 +92,7 @@ void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, Crowd &popul
     // TODO might be a good idea to NOT recompute fitness for indivisuals from previous generations, since time is precious now
     //      (may not be so necessary, I have already eliminated the double fitness computation)
     Genome *g = &(popul[fitnessIndex]);
-    g->fitness = g->evalFitness(theECImage.colored);
+    g->fitness = g->evalFitness(theECImage.colored, theBallPercept);
   }
 
   // set the color thresholds of the next genome, so in the next update cycle the image will be segmented accordingly

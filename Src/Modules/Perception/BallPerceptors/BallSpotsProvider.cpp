@@ -39,8 +39,6 @@ void BallSpotsProvider::update(BallSpots& ballSpots)
       ballSpots.addBallSpot(x, y);
     }
   }
-  #else
-  SystemCall::say("World domination is at hand.");
   #endif
 
   searchScanLines(ballSpots);

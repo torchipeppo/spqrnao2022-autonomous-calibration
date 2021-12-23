@@ -18,12 +18,13 @@
 
 #include "Tools/ImageProcessing/Image.h"
 #include "Tools/ImageProcessing/PixelTypes.h"
+#include "Representations/Perception/BallPercepts/BallPercept.h"
 
 //see above
 #pragma GCC diagnostic pop
 
 // debug tools, the Calibrator includes this so they'll be available there as well
-#define DEBUG true
+#define DEBUG false
 #define DEBUG_COUT(msg) if (DEBUG) std::cout << msg << std::endl
 
 template <typename T>
@@ -61,7 +62,7 @@ class Genome
   void validateParams();
 
   // computes the fitness of a genome from its parameters.
-  int evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage);
+  int evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, const BallPercept& theBallPercept);
 };
 
 // fitness comparators

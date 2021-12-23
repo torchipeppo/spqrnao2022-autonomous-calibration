@@ -17,6 +17,7 @@
 #include "Representations/Infrastructure/CameraImage.h"
 #include "Representations/Infrastructure/CameraInfo.h"
 #include "Representations/Perception/ImagePreprocessing/ECImage.h"
+#include "Representations/Perception/BallPercepts/BallPercept.h"
 #include "Representations/Configuration/FieldColors.h"
 #include "Tools/Module/Module.h"
 
@@ -35,6 +36,7 @@ MODULE(FieldColorsCalibrator,
   REQUIRES(CameraInfo),
   REQUIRES(CameraImage),
   USES(ECImage),
+  USES(BallPercept),
   PROVIDES(FieldColors),
 
   // these parameters are defined in a separat configuration file.
