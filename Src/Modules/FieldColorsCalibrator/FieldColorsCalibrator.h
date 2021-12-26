@@ -68,6 +68,7 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
     Spawning,
     ChildrenFitness,
     GenWrapup,
+    End,
   };
 
   void update(FieldColors& fc) override;
@@ -75,6 +76,7 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
   private:
   void initCalibration();
   // void calibrationStep();
+  void calibrationEnd(FieldColors& fc);
 
   void calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState);
   void calibrationSpawningStep();

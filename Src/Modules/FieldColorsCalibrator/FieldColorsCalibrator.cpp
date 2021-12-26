@@ -304,7 +304,7 @@ void FieldColorsCalibrator::calibrationSpawningStep() {
   if (generation > MAX_GENERATIONS) {
     SystemCall::say("Generation limit exceeded. Color calibration terminated.");
     OUTPUT_TEXT("Generation limit exceeded. Color calibration terminated.");
-    calibrating = false;
+    state = CalibrationState::End;
     return;
   }
 
@@ -371,6 +371,54 @@ void FieldColorsCalibrator::calibrationGenWrapupStep() {
   state = CalibrationState::Spawning;
 }
 
+void FieldColorsCalibrator::calibrationEnd(FieldColors& fc) {
+  // make sure the population is sorted best-first, regardless of how we came to this state
+  sort(population.begin(), population.end(), fitness_gt());
+
+  Genome best = population[0];
+
+  // set the color thresholds to the best ones found by the algorithm
+  fc.maxNonColorSaturation = best.color_delimiter;
+  fc.blackWhiteDelimiter = best.black_white_delimiter;
+  fc.fieldHue.min = best.field_min;
+  fc.fieldHue.max = best.field_max;
+
+  // save these parameters in the robot's configuration files
+  SystemCall::say("Remember that saving needs to be tested in real as well");   // this method MIGHT work even in real as-is, but it's best to check. TODO.
+
+  // search the configuration paths (generic, robot-specific, location-specific, scenario-specific, etc...)
+  // for the first existing config file for this representation...
+  std::string name = "fieldColors.cfg";
+  for(std::string& fullName : File::getFullNames(name))
+  {
+    File path(fullName, "r", false);
+    if(path.exists())
+    {
+      name = std::move(fullName);
+      break;
+    }
+  }
+  // ...and write our newly-calibrated parameters there
+  OutMapFile stream(name, false);
+  ASSERT(stream.exists());
+  stream << fc;
+
+  // inform the simulator user
+  OUTPUT_TEXT("Best genome set and saved on the robot:");
+  std::string line = std::to_string(best.color_delimiter) + ", ";
+  line += std::to_string(best.field_min) + ", ";
+  line += std::to_string(best.field_max) + ", ";
+  line += std::to_string(best.black_white_delimiter);
+  OUTPUT_TEXT(line);
+  OUTPUT_TEXT("(its fitness was " + std::to_string(best.fitness) + ")");
+  OUTPUT_TEXT("If the robot is real, use this command to save on the computer:");
+  OUTPUT_TEXT("save representation:FieldColors");
+
+  // turn of calibration mode
+  state = CalibrationState::Off;
+  calibrating = false;
+}
+
 /**
  * Update cycle, called at each timestep by the rest of the framework.
  */
@@ -385,7 +433,7 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
   DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:hello")
   {
     OUTPUT_TEXT("Hello world");      // outputs to the simulator console
-    SystemCall::say("Hello world");     // activates the robot's test-to-speech feature
+    SystemCall::say("Hello world");     // activates the robot's text-to-speech feature
     std::cout << "Hello world" << std::endl;    // prints to terminal if robot is simulated, or to log file if robot is real
   }
 
@@ -440,6 +488,10 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
       case CalibrationState::GenWrapup:
         DEBUG_COUT("GenWrapup");
         calibrationGenWrapupStep();
+        break;
+      case CalibrationState::End:
+        DEBUG_COUT("End");
+        calibrationEnd(fc);
         break;
     }
   }
