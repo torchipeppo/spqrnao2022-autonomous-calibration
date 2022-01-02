@@ -36,6 +36,11 @@
 
 MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
+// select the specific methods to use here
+// (select and combine to come if/when they have more than one alternative)
+#define CROSSOVER_FN crossover_blend    // TODO try crossover_sbx in real
+#define MUTATION_FN mutate_gaussian   // TODO try mutate_nonuniform in real
+
 bool loaded = false;
 bool breakCalibration = false;
 bool calibrating = false;
@@ -60,10 +65,8 @@ void FieldColorsCalibrator::initCalibration() {
   unsigned seed = (unsigned) 14383421;
   SystemCall::say("with fixed seed");   // fixed seed reminder
   OUTPUT_TEXT("with fixed seed");
-  // SystemCall::say("Truth had gone, truth had gone, and truth had gone.");   // test this preprocessor thing
   #else
   unsigned seed = (unsigned) time(NULL);
-  // SystemCall::say("Ah, now truth lies in the darkness of the sinister hand.");   // test this preprocessor thing
   #endif
   srand(seed);
   generator = std::default_random_engine(seed);
@@ -152,28 +155,28 @@ Couple FieldColorsCalibrator::crossover(Couple parents) {
 
   // first gene
   if (frand() < CROSSOVER_CHANCE) {
-    pair_uc crossed = crossover_blend(child1.color_delimiter, child2.color_delimiter);
+    pair_uc crossed = CROSSOVER_FN(child1.color_delimiter, child2.color_delimiter);
     child1.color_delimiter = crossed.first;
     child2.color_delimiter = crossed.second;
   }
 
   // second gene
   if (frand() < CROSSOVER_CHANCE) {
-    pair_uc crossed = crossover_blend(child1.field_min, child2.field_min);
+    pair_uc crossed = CROSSOVER_FN(child1.field_min, child2.field_min);
     child1.field_min = crossed.first;
     child2.field_min = crossed.second;
   }
 
   // third gene
   if (frand() < CROSSOVER_CHANCE) {
-    pair_uc crossed = crossover_blend(child1.field_max, child2.field_max);
+    pair_uc crossed = CROSSOVER_FN(child1.field_max, child2.field_max);
     child1.field_max = crossed.first;
     child2.field_max = crossed.second;
   }
 
   // fourth gene
   if (frand() < CROSSOVER_CHANCE) {
-    pair_uc crossed = crossover_blend(child1.black_white_delimiter, child2.black_white_delimiter);
+    pair_uc crossed = CROSSOVER_FN(child1.black_white_delimiter, child2.black_white_delimiter);
     child1.black_white_delimiter = crossed.first;
     child2.black_white_delimiter = crossed.second;
   }
@@ -218,6 +221,33 @@ pair_uc FieldColorsCalibrator::crossover_blend(unsigned char x1, unsigned char x
   y2 = clamp255(y2);
   return pair_uc((unsigned char) y1, (unsigned char) y2);
 }
+/**
+ * Simulated binary crossover for a single gene.
+ */
+pair_uc FieldColorsCalibrator::crossover_sbx(unsigned char x1, unsigned char x2) {
+  // work with a wider range to avoid over/under-flow while computing
+  float xx1 = (float) x1;
+  float xx2 = (float) x2;
+  // sample beta
+  float u = frand();
+  float e = 1.0f / (SBX_INDEX + 1.0f);
+  float beta;
+  if (u <= 0.5) {
+    beta = powf(2*u, e);
+  }
+  else {
+    beta = powf(1.0f / (2*(1-u)), e);
+  }
+  // crossover
+  float y1_twice = (1+beta)*xx1 + (1-beta)*xx2;
+  float y2_twice = (1-beta)*xx1 + (1+beta)*xx2;
+  int y1 = (int)(0.5*y1_twice);
+  int y2 = (int)(0.5*y2_twice);
+  // only at the end, clamp them to the unsigned char range
+  y1 = clamp255(y1);
+  y2 = clamp255(y2);
+  return pair_uc((unsigned char) y1, (unsigned char) y2);
+}
 
 /**
  * Mutate both children indepenently of each other.
@@ -233,22 +263,22 @@ Genome FieldColorsCalibrator::mutate_one(Genome child) {
 
   // first gene
   if (frand() < MUTATION_CHANCE) {
-    mutated.color_delimiter = mutate_gaussian(mutated.color_delimiter);
+    mutated.color_delimiter = MUTATION_FN(mutated.color_delimiter);
   }
 
   // second gene
   if (frand() < MUTATION_CHANCE) {
-    mutated.field_min = mutate_gaussian(mutated.field_min);
+    mutated.field_min = MUTATION_FN(mutated.field_min);
   }
 
   // third gene
   if (frand() < MUTATION_CHANCE) {
-    mutated.field_max = mutate_gaussian(mutated.field_max);
+    mutated.field_max = MUTATION_FN(mutated.field_max);
   }
 
   // fourth gene
   if (frand() < MUTATION_CHANCE) {
-    mutated.black_white_delimiter = mutate_gaussian(mutated.black_white_delimiter);
+    mutated.black_white_delimiter = MUTATION_FN(mutated.black_white_delimiter);
   }
 
   return mutated;
@@ -260,6 +290,38 @@ unsigned char FieldColorsCalibrator::mutate_gaussian(unsigned char x) {
   // work in a wider range to avoid under/over-flow
   int xx = (int) x;
   xx += (int) roundf(gaussian(generator));
+  // then clamp back to unsigned char
+  return (unsigned char) clamp255(xx);
+}
+/**
+ * Auxiliary for non-uniform mutation.
+ * Gives a random number in [0,y] such that the probability of getting a low number
+ * increases as t/gmax gets closer to 1.
+ */
+int delta(int t, int y, int gmax, float b) {
+  float r = frand();
+  float gratio = ((float) t) / ((float) gmax);
+  float e = powf(1 - gratio, b);
+  float x = 1 - powf(r, e);
+  float d = (float)y * x;
+  return (int) d;
+}
+/**
+ * Mutate one gene by non-uniform mutation.
+ * It has the property of becoming more likely to produce smaller mutations
+ * as generations pass.
+ */
+unsigned char FieldColorsCalibrator::mutate_nonuniform(unsigned char x) {
+  // work in a wider range to avoid under/over-flow
+  int xx = (int) x;
+  // choose increment or decrement
+  char tau = rand() % 2;
+  if (!tau) {
+    xx += delta(generation, Genome::MAX - xx, MAX_GENERATIONS, NUMUT_B);
+  }
+  else {
+    xx -= delta(generation, xx - Genome::MIN, MAX_GENERATIONS, NUMUT_B);
+  }
   // then clamp back to unsigned char
   return (unsigned char) clamp255(xx);
 }

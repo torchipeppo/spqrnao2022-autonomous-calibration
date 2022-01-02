@@ -39,7 +39,7 @@ MODULE(FieldColorsCalibrator,
   USES(BallPercept),
   PROVIDES(FieldColors),
 
-  // these parameters are defined in a separat configuration file.
+  // these parameters are defined in a separate configuration file.
   LOADS_PARAMETERS(
   {,
     (unsigned) MAX_GENERATIONS,   /** Maximum number of generations before forcefully stopping the search */
@@ -51,9 +51,11 @@ MODULE(FieldColorsCalibrator,
     (float) CROSSOVER_CHANCE,     /** Probability of crossover for each parent pair */
     (float) BLX_ALPHA,            /** Alpha parameter for blend crossover */
     (int) BLX_MIN_WIDTH,          /** Minimum interval width during blend crossover */
+    (float) SBX_INDEX,            /** Parameter for simulated binary crossover. Non-negative, best in [2,5], larger => children closer to parents */
 
     (float) MUTATION_CHANCE,      /** Probability of mutation for each child */
     (float) MUTATION_SIGMA,       /** Standard deviation of the Gaussian mutation of each gene */
+    (float) NUMUT_B,              /** A parameter for non-uniform mutation, simply called "b", which determines the dependency on the number of iterations */
   }),
 });
 
@@ -84,10 +86,15 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
 
   Couple select();
   Genome select_tournament();
+
   Couple crossover(Couple parents);
   pair_uc crossover_blend(unsigned char x1, unsigned char x2);
+  pair_uc crossover_sbx(unsigned char x1, unsigned char x2);
+
   Couple mutate(Couple children);
   Genome mutate_one(Genome child);
   unsigned char mutate_gaussian(unsigned char x);
+  unsigned char mutate_nonuniform(unsigned char x);
+
   Crowd combine_allChildrenThenEliteParents(Crowd oldpop, Crowd newpop);
 };
