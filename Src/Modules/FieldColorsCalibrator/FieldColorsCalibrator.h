@@ -6,7 +6,7 @@
 
 #pragma once
 
-//disabling warnings while importing so I don't see irrelevant messages when compiling
+//disabling warnings while importing so I don't see irrelevant messages from all over the framework when compiling
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
@@ -46,14 +46,31 @@ MODULE(FieldColorsCalibrator,
     (unsigned) POPULATION_SIZE,   /** Number of genomes in each generation */
     (unsigned) CHILDPOP_SIZE,     /** Number of children produced each generation. Must be even. */
 
-    (unsigned) TOURNAMENT_SIZE,   /** Number of genomes participating in each selection tournament */
 
-    (float) CROSSOVER_CHANCE,     /** Probability of crossover for each parent pair */
+    (bool) IS_TOURNAMENT_SIZE_FIXED,                                   // memento: high tourn. size => high selective pressure
+    (unsigned) TOURNAMENT_SIZE,   /** Number of genomes participating in each selection tournament. Only applies if IS_TOURNAMENT_SIZE_FIXED */
+    (unsigned) TOURNAMENT_SIZE_LO,  /** Initial tournament if it's NOT fixed. DOES NOT APPLY otherwise. */
+    (unsigned) TOURNAMENT_SIZE_HI,  /** Final tournament if it's NOT fixed. DOES NOT APPLY otherwise. */
+    (float) TOURNAMENT_SIZE_POLYN_SCHEDULE_POWER,  /** Power of the polynomial law the size follows to increase from LO to HI. ONLY applies if NOT fixed. */
+
+
+    (bool) IS_CROSSOVER_CHANCE_FIXED,
+    (float) CROSSOVER_CHANCE,     /** Fixed probability of crossover for each parent pair. Only applies if IS_CROSSOVER_CHANCE_FIXED. */
+    (float) CROSSOVER_CHANCE_HI,  /** Initial probability of crossover if crossover chance is NOT fixed. DOES NOT APPLY otherwise. */
+    (float) CROSSOVER_CHANCE_LO,  /** Final probability of crossover if crossover chance is NOT fixed. DOES NOT APPLY otherwise. */
+    (float) CROSSOVER_POLYN_SCHEDULE_POWER,   /** Power of the polynomial law the crossover chance follows to decrease from HI to LO. ONLY applies if NOT fixed. */
+
     (float) BLX_ALPHA,            /** Alpha parameter for blend crossover */
     (int) BLX_MIN_WIDTH,          /** Minimum interval width during blend crossover */
     (float) SBX_INDEX,            /** Parameter for simulated binary crossover. Non-negative, best in [2,5], larger => children closer to parents */
 
-    (float) MUTATION_CHANCE,      /** Probability of mutation for each child */
+
+    (bool) IS_MUTATION_CHANCE_FIXED,
+    (float) MUTATION_CHANCE,      /** Fixed probability of mutation for each child. Only applies if IS_MUTATION_CHANCE_FIXED. */
+    (float) MUTATION_CHANCE_HI,   /** Initial probability of mutation if mutation chance is NOT fixed. DOES NOT APPLY otherwise. */
+    (float) MUTATION_CHANCE_LO,   /** Final probability of mutation if mutation chance is NOT fixed. DOES NOT APPLY otherwise. */
+    (float) MUTATION_POLYN_SCHEDULE_POWER,   /** Power of the polynomial law the mutation chance follows to decrease from HI to LO. ONLY applies if NOT fixed. */
+
     (float) MUTATION_SIGMA,       /** Standard deviation of the Gaussian mutation of each gene */
     (float) NUMUT_B,              /** A parameter for non-uniform mutation, simply called "b", which determines the dependency on the number of iterations */
   }),
@@ -85,14 +102,14 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
   void calibrationGenWrapupStep();
 
   Couple select();
-  Genome select_tournament();
+  Genome select_tournament(unsigned tournament_size);
 
-  Couple crossover(Couple parents);
+  Couple crossover(Couple parents, float crossover_chance);
   pair_uc crossover_blend(unsigned char x1, unsigned char x2);
   pair_uc crossover_sbx(unsigned char x1, unsigned char x2);
 
-  Couple mutate(Couple children);
-  Genome mutate_one(Genome child);
+  Couple mutate(Couple children, float mutation_chance);
+  Genome mutate_one(Genome child, float mutation_chance);
   unsigned char mutate_gaussian(unsigned char x);
   unsigned char mutate_nonuniform(unsigned char x);
 

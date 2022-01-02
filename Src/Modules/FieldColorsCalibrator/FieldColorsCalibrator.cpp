@@ -115,20 +115,45 @@ void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, Crowd &popul
   }
 }
 
+// auxiliaries to variate certain parameters like crossover probability according to a polynomial schedule.
+// lo<=hi, t in [0,1], pow is float to also allow a square-root law w/ pow=0.5
+// needless to say, pow=1 is a linear law.
+float polynomial_interpolation(float lo, float hi, float t, float pow, bool ascending) {
+  if (ascending) {
+    return lo + (hi-lo) * powf(t, pow);
+  }
+  else {
+    return hi - (hi-lo) * powf(t, pow);
+  }
+}
+int polynomial_interpolation_rounded(float lo, float hi, float t, float pow, bool ascending) {
+  return (int) std::round(polynomial_interpolation(lo, hi, t, pow, ascending));
+}
+
 /**
  * Select ONE PAIR of parents, based on fitness.
  */
 Couple FieldColorsCalibrator::select() {
-  return Couple(select_tournament(), select_tournament());
+  unsigned tournament_size = TOURNAMENT_SIZE;
+  if (!IS_TOURNAMENT_SIZE_FIXED) {
+    tournament_size = (unsigned) polynomial_interpolation_rounded(
+      (float) TOURNAMENT_SIZE_LO,
+      (float) TOURNAMENT_SIZE_HI,
+      ((float) generation) / ((float) MAX_GENERATIONS),
+      TOURNAMENT_SIZE_POLYN_SCHEDULE_POWER,
+      true
+    );
+  }
+  return Couple(select_tournament(tournament_size), select_tournament(tournament_size));
 }
 /**
  * Select ONE genome by tournament.
  */
-Genome FieldColorsCalibrator::select_tournament() {
+Genome FieldColorsCalibrator::select_tournament(unsigned tournament_size) {
   // initialize the best genome directly with the first random participant of this tournament
   Genome champion = population[rand() % POPULATION_SIZE];
   // let the other challengers approach
-  for (unsigned i=0; i<TOURNAMENT_SIZE-1; i++) {
+  for (unsigned i=0; i<tournament_size-1; i++) {
     Genome challenger = population[rand() % POPULATION_SIZE];
     if (challenger.fitness > champion.fitness) {
       champion = challenger;
@@ -149,33 +174,33 @@ float frand() {
  * Perform crossover on the two parents to produce two children.
  * Each gene is crossed-over independently of the others.
  */
-Couple FieldColorsCalibrator::crossover(Couple parents) {
+Couple FieldColorsCalibrator::crossover(Couple parents, float crossover_chance) {
   Genome child1(parents.first);
   Genome child2(parents.second);
 
   // first gene
-  if (frand() < CROSSOVER_CHANCE) {
+  if (frand() < crossover_chance) {
     pair_uc crossed = CROSSOVER_FN(child1.color_delimiter, child2.color_delimiter);
     child1.color_delimiter = crossed.first;
     child2.color_delimiter = crossed.second;
   }
 
   // second gene
-  if (frand() < CROSSOVER_CHANCE) {
+  if (frand() < crossover_chance) {
     pair_uc crossed = CROSSOVER_FN(child1.field_min, child2.field_min);
     child1.field_min = crossed.first;
     child2.field_min = crossed.second;
   }
 
   // third gene
-  if (frand() < CROSSOVER_CHANCE) {
+  if (frand() < crossover_chance) {
     pair_uc crossed = CROSSOVER_FN(child1.field_max, child2.field_max);
     child1.field_max = crossed.first;
     child2.field_max = crossed.second;
   }
 
   // fourth gene
-  if (frand() < CROSSOVER_CHANCE) {
+  if (frand() < crossover_chance) {
     pair_uc crossed = CROSSOVER_FN(child1.black_white_delimiter, child2.black_white_delimiter);
     child1.black_white_delimiter = crossed.first;
     child2.black_white_delimiter = crossed.second;
@@ -252,32 +277,35 @@ pair_uc FieldColorsCalibrator::crossover_sbx(unsigned char x1, unsigned char x2)
 /**
  * Mutate both children indepenently of each other.
  */
-Couple FieldColorsCalibrator::mutate(Couple children) {
-  return Couple(mutate_one(children.first), mutate_one(children.second));
+Couple FieldColorsCalibrator::mutate(Couple children, float mutation_chance) {
+  return Couple(
+    mutate_one(children.first, mutation_chance),
+    mutate_one(children.second, mutation_chance)
+  );
 }
 /**
  * Mutate one child, each gene independently of the others.
  */
-Genome FieldColorsCalibrator::mutate_one(Genome child) {
+Genome FieldColorsCalibrator::mutate_one(Genome child, float mutation_chance) {
   Genome mutated(child);
 
   // first gene
-  if (frand() < MUTATION_CHANCE) {
+  if (frand() < mutation_chance) {
     mutated.color_delimiter = MUTATION_FN(mutated.color_delimiter);
   }
 
   // second gene
-  if (frand() < MUTATION_CHANCE) {
+  if (frand() < mutation_chance) {
     mutated.field_min = MUTATION_FN(mutated.field_min);
   }
 
   // third gene
-  if (frand() < MUTATION_CHANCE) {
+  if (frand() < mutation_chance) {
     mutated.field_max = MUTATION_FN(mutated.field_max);
   }
 
   // fourth gene
-  if (frand() < MUTATION_CHANCE) {
+  if (frand() < mutation_chance) {
     mutated.black_white_delimiter = MUTATION_FN(mutated.black_white_delimiter);
   }
 
@@ -370,11 +398,39 @@ void FieldColorsCalibrator::calibrationSpawningStep() {
     return;
   }
 
+  float gratio = ((float) generation) / ((float) MAX_GENERATIONS);
+
+  // Set crossover chance to either its fixed value or a variable value according to a polynomial schedule.
+  // The selection and all parameters are set in the config file.
+  float crossover_chance = CROSSOVER_CHANCE;
+  if (!IS_CROSSOVER_CHANCE_FIXED) {
+    crossover_chance = polynomial_interpolation(
+      CROSSOVER_CHANCE_LO,
+      CROSSOVER_CHANCE_HI,
+      gratio,
+      CROSSOVER_POLYN_SCHEDULE_POWER,
+      false
+    );
+  }
+
+  // Set mutation chance to either its fixed value or a variable value according to a polynomial schedule.
+  // The selection and all parameters are set in the config file.
+  float mutation_chance = MUTATION_CHANCE;
+  if (!IS_MUTATION_CHANCE_FIXED) {
+    mutation_chance = polynomial_interpolation(
+      MUTATION_CHANCE_LO,
+      MUTATION_CHANCE_HI,
+      gratio,
+      MUTATION_POLYN_SCHEDULE_POWER,
+      false
+    );
+  }
+
   child_population.clear();
   for (unsigned i=0; i<CHILDPOP_SIZE/2; i++) {
     Couple parents = select();
-    Couple children = crossover(parents);
-    Couple mutated = mutate(children);
+    Couple children = crossover(parents, crossover_chance);
+    Couple mutated = mutate(children, mutation_chance);
     child_population.push_back(mutated.first);
     child_population.push_back(mutated.second);
   }

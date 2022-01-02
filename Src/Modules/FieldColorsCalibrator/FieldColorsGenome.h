@@ -8,7 +8,7 @@
 
 #pragma once
 
-//disabling warnings while importing so I don't see irrelevant messages when compiling
+//disabling warnings while importing so I don't see irrelevant messages from all over the framework when compiling
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
