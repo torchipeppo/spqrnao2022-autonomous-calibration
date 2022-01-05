@@ -38,8 +38,8 @@ MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 
 // select the specific methods to use here
 // (select and combine to come if/when they have more than one alternative)
-#define CROSSOVER_FN crossover_blend    // TODO try crossover_sbx in real
-#define MUTATION_FN mutate_gaussian   // TODO try mutate_nonuniform in real
+#define CROSSOVER_FN crossover_blend      // Alternatives:   crossover_blend, crossover_sbx
+#define MUTATION_FN mutate_gaussian       // Alternatives:   mutate_gaussian, mutate_nonuniform
 
 bool loaded = false;
 bool breakCalibration = false;
@@ -502,8 +502,6 @@ void FieldColorsCalibrator::calibrationEnd(FieldColors& fc) {
   fc.fieldHue.max = best.field_max;
 
   // save these parameters in the robot's configuration files
-  SystemCall::say("Remember that saving needs to be tested in real as well");   // this method MIGHT work even in real as-is, but it's best to check. TODO.
-
   // search the configuration paths (generic, robot-specific, location-specific, scenario-specific, etc...)
   // for the first existing config file for this representation...
   std::string name = "fieldColors.cfg";

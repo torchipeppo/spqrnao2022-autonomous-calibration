@@ -62,9 +62,7 @@ void Genome::validateParams() {
 #define FW_LOSS_FORMULA(field_width) (field_width/10)*100
 #define BW_THRESHOLD 100
 #define BW_LOSS_ONE 5000
-#define DELIMITER_LOW_THRESHOLD 64
-#define DELIMITER_HIGH_THRESHOLD 255-64
-#define DELIMITER_LOSS 100    // very small, just to make a difference betwen multiple already-optimal genomes
+#define SECOND_BLACK_LOSS_FORMULA(second_black_counter) second_black_counter*10  // relatively small, just to make a difference b/w already-optimal genomes
 
 // HIGH fitness wins.
 int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, const BallPercept& theBallPercept) {
@@ -117,16 +115,30 @@ int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, con
     bw_penalty += BW_LOSS_ONE;
   }
 
-  // I noticed that the bw delimiter tends to be pretty high for no reason,
-  // resulting in the field lines becoming partly black.
-  // TODO THIS NEEDS TO BE INVESTIGATED IN REAL, SIMULATION IS TOO PERFECT.
-  // As a momentary, hopefully-not-nonsensical fix, however...
-  int delimiter_penalty = 0;
-  if (black_white_delimiter < DELIMITER_LOW_THRESHOLD || black_white_delimiter > DELIMITER_HIGH_THRESHOLD) {
-    delimiter_penalty = DELIMITER_LOSS;
+  // additional penalty to avoid seeing too much black in the image:
+  // minimize black pixels outside of the ball.
+  // this only makes sense as long as the camera only looks at the field,
+  // which is true since we only calibrate the lower camera,
+  // but may fail if we start looking around.
+  // but if we do, that would be a secondary, fine-tuning phase, so we might as well enforce a
+  // "don't stray too much from the previous solution" policy and forget this part.
+  int second_black_counter = 0;
+  if (theBallPercept.status == BallPercept::Status::seen) {    // of course, "outside the ball" only makes sense if we saw the ball in the first place
+    for (unsigned i=0; i<coloredImage.width; i++) {
+      for (unsigned j=0; j<coloredImage.height; j++) {
+        FieldColors::Color px = coloredImage[i][j];
+        if (px == FieldColors::black) {
+          float sqr_dist_from_ball = (Vector2f(i,j) - theBallPercept.positionInImage).squaredNorm();
+          if (sqr_dist_from_ball > theBallPercept.radiusInImage*theBallPercept.radiusInImage + 9) {
+            second_black_counter++;
+          }
+        }
+      }
+    }
   }
+  int second_black_penalty = second_black_counter*10;
 
-  int fitness = field_score + ball_bonus - field_width_penalty - bw_penalty - delimiter_penalty;
+  int fitness = field_score + ball_bonus - field_width_penalty - bw_penalty - second_black_penalty;
 
   DEBUG_COUT("    And my fitness is: " << fitness);
 
@@ -134,12 +146,14 @@ int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, con
 }
 
 /**
- * TODO test in real post-christmas b/c the field interval (predictably)
- * ends up very very narrow in simulation (like, width 5 or 10).
+ * In simulation, the field interval (predictably) ends up very very narrow (like, width 5 or 10).
  * Possible solutions I can think of:
  * - Set field width penalty to zero if the interval is narrower than a threshold
  * - Let the genetic algorithm return a narrow interval, then widen it a posteriori
  *   by e.g. 5 per endpoint in order to give ourselves some margin
+ * 
+ * In real things are obviously very different and the interval ends up 60~80 wide.
+ * So this might not be such a problem. I'll leave it here just for future reference.
  * 
  * Also investigate the bw delimiter thing, as above.
  */
