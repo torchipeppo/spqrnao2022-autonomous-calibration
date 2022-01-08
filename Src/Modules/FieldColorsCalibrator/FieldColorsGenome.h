@@ -42,6 +42,9 @@ class Genome
   // arbitrary constructor
   Genome(unsigned char cdel, unsigned char fmin, unsigned char fmax, unsigned char bwdl);
 
+  // constructor from FieldColors representation
+  Genome(const FieldColors &fc);
+
   // copy constructor
   Genome(const Genome &g);
 
@@ -65,6 +68,8 @@ class Genome
 
   // computes the fitness of a genome from its parameters.
   int evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, const BallPercept& theBallPercept);
+  // computes a different fitness for the fine-tuning phase.
+  int evalFitness_phase2(const Image<PixelTypes::ColoredPixel>& coloredImage, const Genome& reference_calibration);
 };
 
 // fitness comparators

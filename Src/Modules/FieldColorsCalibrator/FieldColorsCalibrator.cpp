@@ -54,8 +54,24 @@ Crowd population;
 Crowd child_population;
 unsigned generation = 0;
 
+//used in phase 2 to save the calibration obtained at the end of phase 1
+Genome reference_calibration = Genome();
+
 std::default_random_engine generator;
 std::normal_distribution<float> gaussian;
+
+// Make sure that phase 2 only affects the field thresholds, if so desired,
+// by calling this right after a new population has been created.
+// This will side-affect that population.
+// This should only be called if the PHASE2_IS_STRICT parameter is true,
+// and if reference_calibration is properly initialized (it surely is during phase 2).
+void phase2_enforce_strictness(Crowd &popul) {
+  for (unsigned i=0; i<popul.size(); i++) {
+    Genome *g = &(popul[i]);
+    g->color_delimiter = reference_calibration.color_delimiter;
+    g->black_white_delimiter = reference_calibration.black_white_delimiter;
+  }
+}
 
 void FieldColorsCalibrator::initCalibration() {
   OUTPUT_TEXT("Beginning color calibration");
@@ -90,14 +106,49 @@ void FieldColorsCalibrator::initCalibration() {
   fitnessIndex = -1;
 }
 
+void FieldColorsCalibrator::initPhase2(const FieldColors& fc) {
+  OUTPUT_TEXT("Beginning phase 2");
+  SystemCall::say("Beginning phase 2");
+  std::cout << "Beginning phase 2" << std::endl;
+
+  // initialize population as variants of the current calibration (which was the result of phase 1)
+  reference_calibration = Genome(fc);
+  population.clear();
+  for (unsigned i=0; i<POPULATION_SIZE; i++) {
+    population.push_back(mutate_one(reference_calibration, 1.0));
+  }
+
+  if (PHASE2_IS_STRICT) {
+    phase2_enforce_strictness(population);
+  }
+
+  // start counting
+  generation = 0;
+
+  // notify the update loop that calibration has begun
+  calibrating = true;
+  state = CalibrationState::InitFitness_Phase2;
+  fitnessIndex = -1;
+}
+
 // evaluate the fitness of one genome per update cycle
-void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState) {
+void FieldColorsCalibrator::calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState, int phase) {
   // evaluate current genome
   if (fitnessIndex >= 0) {
-    // TODO might be a good idea to NOT recompute fitness for indivisuals from previous generations, since time is precious now
-    //      (may not be so necessary, I have already eliminated the double fitness computation)
     Genome *g = &(popul[fitnessIndex]);
-    g->fitness = g->evalFitness(theECImage.colored, theBallPercept);
+    // the two phases of the calibration require different fitnesses
+    switch (phase) {
+      case 1:     // actual calibration, looking only at field and ball
+        g->fitness = g->evalFitness(theECImage.colored, theBallPercept);
+        break;
+      case 2:     // fine-tuning, looking also beyond the field in order to not see green outside of it
+        g->fitness = g->evalFitness_phase2(theECImage.colored, reference_calibration);
+        break;
+      default:
+        std::cout << "Unrecognized phase: " << phase << std::endl;
+        OUTPUT_TEXT("My plan is not that detailed! This phase doesn't exist: " + std::to_string(phase));
+        break;
+    }
   }
 
   // set the color thresholds of the next genome, so in the next update cycle the image will be segmented accordingly
@@ -135,9 +186,10 @@ int polynomial_interpolation_rounded(float lo, float hi, float t, float pow, boo
 /**
  * Select ONE PAIR of parents, based on fitness.
  */
-Couple FieldColorsCalibrator::select() {
+Couple FieldColorsCalibrator::select(int phase) {
   unsigned tournament_size = TOURNAMENT_SIZE;
-  if (!IS_TOURNAMENT_SIZE_FIXED) {
+
+  if (phase==1 && !IS_TOURNAMENT_SIZE_FIXED) {
     tournament_size = (unsigned) polynomial_interpolation_rounded(
       (float) TOURNAMENT_SIZE_LO,
       (float) TOURNAMENT_SIZE_HI,
@@ -146,6 +198,11 @@ Couple FieldColorsCalibrator::select() {
       true
     );
   }
+
+  else if (phase==2) {
+    tournament_size = TOURNAMENT_SIZE_PHASE2;
+  }
+
   return Couple(select_tournament(tournament_size), select_tournament(tournament_size));
 }
 /**
@@ -390,6 +447,19 @@ Crowd FieldColorsCalibrator::combine_allChildrenThenEliteParents(Crowd oldpop, C
   return future;
 }
 
+// the actual production of the next generation, a procedure common to both phases
+// does side-effect on child_population, which is global
+void FieldColorsCalibrator::spawn(float crossover_chance, float mutation_chance, int phase) {
+  child_population.clear();
+  for (unsigned i=0; i<CHILDPOP_SIZE/2; i++) {
+    Couple parents = select(phase);
+    Couple children = crossover(parents, crossover_chance);
+    Couple mutated = mutate(children, mutation_chance);
+    child_population.push_back(mutated.first);
+    child_population.push_back(mutated.second);
+  }
+}
+
 void FieldColorsCalibrator::calibrationSpawningStep() {
   // advance to next generation
   generation++;
@@ -428,21 +498,45 @@ void FieldColorsCalibrator::calibrationSpawningStep() {
     );
   }
 
-  child_population.clear();
-  for (unsigned i=0; i<CHILDPOP_SIZE/2; i++) {
-    Couple parents = select();
-    Couple children = crossover(parents, crossover_chance);
-    Couple mutated = mutate(children, mutation_chance);
-    child_population.push_back(mutated.first);
-    child_population.push_back(mutated.second);
-  }
+  spawn(crossover_chance, mutation_chance, 1);
+  // side-affects child_population
 
   // initiate children's fitness evaluation
   state = CalibrationState::ChildrenFitness;
   fitnessIndex = -1;
 }
 
-void FieldColorsCalibrator::calibrationGenWrapupStep() {
+void FieldColorsCalibrator::calibrationSpawningStep_phase2() {
+  // advance to next generation
+  generation++;
+  if (generation > MAX_GENERATIONS_PHASE2) {
+    SystemCall::say("Generation limit exceeded. Phase 2 terminated.");
+    OUTPUT_TEXT("Generation limit exceeded. Phase 2 terminated.");
+    state = CalibrationState::End_Phase2;
+    return;
+  }
+
+  // unused ATM
+  // float gratio = ((float) generation) / ((float) MAX_GENERATIONS_PHASE2);
+
+  // Phase 2 is already a fine-tuning phase, so I have no interest in making its parameters
+  // variable like in phase 1
+  float crossover_chance = CROSSOVER_CHANCE_PHASE2;
+  float mutation_chance = MUTATION_CHANCE_PHASE2;
+
+  spawn(crossover_chance, mutation_chance, 2);
+  // side-affects child_population
+  
+  if (PHASE2_IS_STRICT) {
+    phase2_enforce_strictness(child_population);
+  }
+
+  // initiate children's fitness evaluation
+  state = CalibrationState::ChildrenFitness_Phase2;
+  fitnessIndex = -1;
+}
+
+void FieldColorsCalibrator::calibrationGenWrapupStep(int phase) {
   // combine parent and child populations in some way
   // in order to create the poputation that will go into the next generation
   population = combine_allChildrenThenEliteParents(population, child_population);
@@ -487,8 +581,19 @@ void FieldColorsCalibrator::calibrationGenWrapupStep() {
   SystemCall::say(line.c_str());
 
 
-  // begin next spawning phase
-  state = CalibrationState::Spawning;
+  // begin spawning the next generation
+  switch (phase) {
+    case 1:
+      state = CalibrationState::Spawning;
+      break;
+    case 2:
+      state = CalibrationState::Spawning_Phase2;
+      break;
+    default:
+      std::cout << "Unrecognized phase: " << phase << std::endl;
+      OUTPUT_TEXT("My plan is not that detailed! This phase doesn't exist: " + std::to_string(phase));
+      break;
+  }
 }
 
 void FieldColorsCalibrator::calibrationEnd(FieldColors& fc) {
@@ -591,6 +696,16 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
     initCalibration();
   }
 
+  DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:phase2")
+  {
+    initPhase2(fc);
+  }
+
+  if (FieldColorsBoard::get_cognition_to_lower() == FLDCOLBRD__C2L_BEGIN_PHASE2) {
+    FieldColorsBoard::del_cognition_to_lower();
+    initPhase2(fc);
+  }
+
   // Calibrate
   if (calibrating) {
     // calibrationStep();
@@ -600,7 +715,7 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
         break;
       case CalibrationState::InitFitness:
         DEBUG_COUT("InitFitness " << fitnessIndex);
-        calibrationFitnessStep(fc, population, CalibrationState::Spawning);
+        calibrationFitnessStep(fc, population, CalibrationState::Spawning, 1);
         break;
       case CalibrationState::Spawning:
         DEBUG_COUT("Spawning");
@@ -608,14 +723,37 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
         break;
       case CalibrationState::ChildrenFitness:
         DEBUG_COUT("ChildrenFitness " << fitnessIndex);
-        calibrationFitnessStep(fc, child_population, CalibrationState::GenWrapup);
+        calibrationFitnessStep(fc, child_population, CalibrationState::GenWrapup, 1);
         break;
       case CalibrationState::GenWrapup:
         DEBUG_COUT("GenWrapup");
-        calibrationGenWrapupStep();
+        calibrationGenWrapupStep(1);
         break;
       case CalibrationState::End:
         DEBUG_COUT("End");
+        calibrationEnd(fc);
+        break;
+      case CalibrationState::Init_Phase2:
+        // nothing, initPhase2 is called as the message is received at the moment
+        break;
+      case CalibrationState::InitFitness_Phase2:
+        DEBUG_COUT("InitFitness_Phase2 " << fitnessIndex);
+        calibrationFitnessStep(fc, population, CalibrationState::Spawning_Phase2, 2);
+        break;
+      case CalibrationState::Spawning_Phase2:
+        DEBUG_COUT("Spawning_Phase2");
+        calibrationSpawningStep_phase2();
+        break;
+      case CalibrationState::ChildrenFitness_Phase2:
+        DEBUG_COUT("ChildrenFitness_Phase2 " << fitnessIndex);
+        calibrationFitnessStep(fc, child_population, CalibrationState::GenWrapup_Phase2, 2);
+        break;
+      case CalibrationState::GenWrapup_Phase2:
+        DEBUG_COUT("GenWrapup_Phase2");
+        calibrationGenWrapupStep(2);
+        break;
+      case CalibrationState::End_Phase2:
+        DEBUG_COUT("End_Phase2");
         calibrationEnd(fc);
         break;
     }

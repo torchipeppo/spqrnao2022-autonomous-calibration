@@ -1,7 +1,12 @@
 /**
  * @file ColorCalibrationCard.cpp
  *
- * Card to... TODO
+ * Card that defines the color calibration behavior.
+ * Calibration involves only the Lower camera, in order to make all fitnesses comparable
+ * and avoid concurrency issues, and happens in two phases: first calibrate all parameters
+ * by looking only at the field and a ball, then turn the head up to look forward
+ * and begin a fine-tuning phase in order to make sure that the environment
+ * beyond the field is not classified as green.
  *
  * @author Francesco Petri
  */
@@ -16,25 +21,11 @@
 #pragma GCC diagnostic ignored "-Wenum-enum-conversion"
 #pragma GCC diagnostic ignored "-Wenum-float-conversion"
 
-#include "Representations/BehaviorControl/BehaviorStatus.h"
-#include "Representations/BehaviorControl/FieldBall.h"
-#include "Representations/Configuration/BallSpecification.h"
-#include "Representations/Modeling/BallModel.h"
-#include "Representations/BehaviorControl/BallCarrierModel/BallCarrierModel.h"
 #include "Representations/BehaviorControl/Skills.h"
-#include "Representations/BehaviorControl/BehaviorStatus.h"
-#include "Representations/Configuration/FieldDimensions.h"
-#include "Representations/spqr_representations/PassShare.h"
-#include "Representations/Infrastructure/FrameInfo.h"
-#include "Representations/Modeling/RobotPose.h"
 #include "Tools/BehaviorControl/Framework/Card/Card.h"
 #include "Tools/BehaviorControl/Framework/Card/CabslCard.h"
-#include "Representations/Communication/RobotInfo.h"
-#include "Representations/Communication/TeamData.h"
-#include "Representations/BehaviorControl/Libraries/LibCheck.h"
-#include "Tools/Math/BHMath.h"
-#include "Platform/SystemCall.h"
-#include <string>
+#include "Representations/BehaviorControl/BehaviorStatus.h"
+#include "Representations/MotionControl/HeadMotionRequest.h"
 
 #include "Modules/FieldColorsCalibrator/FieldColorsBoard.h"
 
@@ -46,14 +37,12 @@ CARD(ColorCalibrationCard,
   CALLS(Activity),
   CALLS(Say),
   
-  CALLS(LookForward),
   CALLS(LookAtAngles),
-  CALLS(LookAtPoint),
-  CALLS(LookLeftAndRight),
+  //currently unused, but might turn out useful
+  // CALLS(LookAtPoint),
+  // CALLS(LookForward),
 
   CALLS(Stand),
-
-  REQUIRES(FieldBall),
 });
 
 #define TILT_PHASE1 -0.65f
@@ -84,7 +73,7 @@ class ColorCalibrationCard : public ColorCalibrationCardBase
 
       action
       {
-        // framework wants these to be set at all times
+        // framework wants an Activity at all times, as well as motion directives for both head (LookAtAngles) and body (Stand)
         theActivitySkill(BehaviorStatus::unknown);
         theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
         theStandSkill();
@@ -185,7 +174,7 @@ class ColorCalibrationCard : public ColorCalibrationCardBase
       action
       {
         theActivitySkill(BehaviorStatus::unknown);
-        theLookForwardSkill();
+        theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
         theStandSkill();
         theSaySkill("The whole calibration procedure has been completed successfully. The calibration has been saved to my configuration files.");
       }

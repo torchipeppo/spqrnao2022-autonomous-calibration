@@ -45,6 +45,7 @@ MODULE(FieldColorsCalibrator,
   LOADS_PARAMETERS(
   {,
     (unsigned) MAX_GENERATIONS,   /** Maximum number of generations before forcefully stopping the search */
+    (unsigned) MAX_GENERATIONS_PHASE2,   /** Same, but for the second hase of the procedure. */
     (unsigned) POPULATION_SIZE,   /** Number of genomes in each generation */
     (unsigned) CHILDPOP_SIZE,     /** Number of children produced each generation. Must be even. */
 
@@ -54,6 +55,7 @@ MODULE(FieldColorsCalibrator,
     (unsigned) TOURNAMENT_SIZE_LO,  /** Initial tournament if it's NOT fixed. DOES NOT APPLY otherwise. */
     (unsigned) TOURNAMENT_SIZE_HI,  /** Final tournament if it's NOT fixed. DOES NOT APPLY otherwise. */
     (float) TOURNAMENT_SIZE_POLYN_SCHEDULE_POWER,  /** Power of the polynomial law the size follows to increase from LO to HI. ONLY applies if NOT fixed. */
+    (unsigned) TOURNAMENT_SIZE_PHASE2,   /** Same, but for the second hase of the procedure. */
 
 
     (bool) IS_CROSSOVER_CHANCE_FIXED,
@@ -61,6 +63,7 @@ MODULE(FieldColorsCalibrator,
     (float) CROSSOVER_CHANCE_HI,  /** Initial probability of crossover if crossover chance is NOT fixed. DOES NOT APPLY otherwise. */
     (float) CROSSOVER_CHANCE_LO,  /** Final probability of crossover if crossover chance is NOT fixed. DOES NOT APPLY otherwise. */
     (float) CROSSOVER_POLYN_SCHEDULE_POWER,   /** Power of the polynomial law the crossover chance follows to decrease from HI to LO. ONLY applies if NOT fixed. */
+    (float) CROSSOVER_CHANCE_PHASE2,     /** Same, but for the second hase of the procedure. */
 
     (float) BLX_ALPHA,            /** Alpha parameter for blend crossover */
     (int) BLX_MIN_WIDTH,          /** Minimum interval width during blend crossover */
@@ -72,9 +75,12 @@ MODULE(FieldColorsCalibrator,
     (float) MUTATION_CHANCE_HI,   /** Initial probability of mutation if mutation chance is NOT fixed. DOES NOT APPLY otherwise. */
     (float) MUTATION_CHANCE_LO,   /** Final probability of mutation if mutation chance is NOT fixed. DOES NOT APPLY otherwise. */
     (float) MUTATION_POLYN_SCHEDULE_POWER,   /** Power of the polynomial law the mutation chance follows to decrease from HI to LO. ONLY applies if NOT fixed. */
+    (float) MUTATION_CHANCE_PHASE2,      /** Same, but for the second hase of the procedure. */
 
     (float) MUTATION_SIGMA,       /** Standard deviation of the Gaussian mutation of each gene */
     (float) NUMUT_B,              /** A parameter for non-uniform mutation, simply called "b", which determines the dependency on the number of iterations */
+
+    (bool) PHASE2_IS_STRICT,      /** If true, phase 2 will only fine-tune the field thresholds, while leavig the rest of the parameters alone. */
   }),
 });
 
@@ -90,6 +96,12 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
     ChildrenFitness,
     GenWrapup,
     End,
+    Init_Phase2,
+    InitFitness_Phase2,
+    Spawning_Phase2,
+    ChildrenFitness_Phase2,
+    GenWrapup_Phase2,
+    End_Phase2,
   };
 
   void update(FieldColors& fc) override;
@@ -98,12 +110,15 @@ class FieldColorsCalibrator : public FieldColorsCalibratorBase
   void initCalibration();
   // void calibrationStep();
   void calibrationEnd(FieldColors& fc);
+  void initPhase2(const FieldColors& fc);
 
-  void calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState);
+  void calibrationFitnessStep(FieldColors &fc, Crowd &popul, const CalibrationState &nextState, int phase);
   void calibrationSpawningStep();
-  void calibrationGenWrapupStep();
+  void calibrationSpawningStep_phase2();
+  void spawn(float crossover_chance, float mutation_chance, int phase);
+  void calibrationGenWrapupStep(int phase);
 
-  Couple select();
+  Couple select(int phase);
   Genome select_tournament(unsigned tournament_size);
 
   Couple crossover(Couple parents, float crossover_chance);

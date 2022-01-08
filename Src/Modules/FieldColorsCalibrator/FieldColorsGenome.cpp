@@ -21,6 +21,14 @@ Genome::Genome(unsigned char cdel, unsigned char fmin, unsigned char fmax, unsig
   validateParams();
 }
 
+Genome::Genome(const FieldColors &fc) {
+  color_delimiter = fc.maxNonColorSaturation;
+  field_min = fc.fieldHue.min;
+  field_max = fc.fieldHue.max;
+  black_white_delimiter = fc.blackWhiteDelimiter;
+  validateParams();
+}
+
 Genome::Genome(const Genome &g) {
   color_delimiter = g.color_delimiter;
   field_min = g.field_min;
@@ -75,7 +83,7 @@ int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, con
       none_counter = 0;
   for (unsigned i=0; i<coloredImage.width; i++) {
     for (unsigned j=0; j<coloredImage.height; j++) {
-      FieldColors::Color px = coloredImage[i][j];
+      FieldColors::Color px = coloredImage[Vector2i(i,j)];
       if (px == FieldColors::field) {
         green_counter++;
       }
@@ -126,7 +134,7 @@ int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, con
   if (theBallPercept.status == BallPercept::Status::seen) {    // of course, "outside the ball" only makes sense if we saw the ball in the first place
     for (unsigned i=0; i<coloredImage.width; i++) {
       for (unsigned j=0; j<coloredImage.height; j++) {
-        FieldColors::Color px = coloredImage[i][j];
+        FieldColors::Color px = coloredImage[Vector2i(i,j)];
         if (px == FieldColors::black) {
           float sqr_dist_from_ball = (Vector2f(i,j) - theBallPercept.positionInImage).squaredNorm();
           if (sqr_dist_from_ball > theBallPercept.radiusInImage*theBallPercept.radiusInImage + 9) {
@@ -157,3 +165,80 @@ int Genome::evalFitness(const Image<PixelTypes::ColoredPixel>& coloredImage, con
  * 
  * Also investigate the bw delimiter thing, as above.
  */
+
+
+#define FIELD_REWARD_FORMULA_PHASE2(green_counter_up, green_counter_dn) (green_counter_dn - green_counter_up)
+#define STRAY_LOSS(me, reference) (me-reference)*(me-reference)    // REMEMBER TO USE ABSOLUTE VALUE if we decide to change from quadratic
+
+// HIGH fitness still wins.
+int Genome::evalFitness_phase2(const Image<PixelTypes::ColoredPixel>& coloredImage, const Genome& reference_calibration) {
+  // Separate the image into upper and lower half, and count the color in each half
+  int green_counter_up = 0,
+      white_counter_up = 0,
+      black_counter_up = 0,
+      none_counter_up = 0;
+  for (unsigned i=0; i<coloredImage.width; i++) {
+    for (unsigned j=0; j<coloredImage.height/2; j++) {
+      FieldColors::Color px = coloredImage[Vector2i(i,j)];
+      if (px == FieldColors::field) {
+        green_counter_up++;
+      }
+      else if (px == FieldColors::white) {
+        white_counter_up++;
+      }
+      else if (px == FieldColors::black) {
+        black_counter_up++;
+      }
+      else if (px == FieldColors::none) {
+        none_counter_up++;
+      }
+    }
+  }
+  int green_counter_dn = 0,
+      white_counter_dn = 0,
+      black_counter_dn = 0,
+      none_counter_dn = 0;
+  for (unsigned i=0; i<coloredImage.width; i++) {
+    for (unsigned j = coloredImage.height/2; j<coloredImage.height; j++) {
+      FieldColors::Color px = coloredImage[Vector2i(i,j)];
+      if (px == FieldColors::field) {
+        green_counter_dn++;
+      }
+      else if (px == FieldColors::white) {
+        white_counter_dn++;
+      }
+      else if (px == FieldColors::black) {
+        black_counter_dn++;
+      }
+      else if (px == FieldColors::none) {
+        none_counter_dn++;
+      }
+    }
+  }
+
+  // Main component of this fitness: see as much green as possible in the lower half (where the field is),
+  // but also see as little as possible in the upper half (where the rest of the environment is).
+  int field_score = FIELD_REWARD_FORMULA_PHASE2(green_counter_up, green_counter_dn);
+
+  // Penalize wide field intervals in order to avoid clustering too much into green
+  int field_width = field_max - field_min;
+  int field_width_penalty = FW_LOSS_FORMULA(field_width);
+
+  // Since the "actual" calibration was done in the previous calibration phase,
+  // and phase 2 does not have a proper viewpoint for a full calibration, but rather it's just a fine-tuning,
+  // make sure that the genes do not stray too much from the phase 1 results by imposing a penalty.
+  int stray_penalty = 0;
+  stray_penalty += STRAY_LOSS(color_delimiter, reference_calibration.color_delimiter);
+  stray_penalty += STRAY_LOSS(field_min, reference_calibration.field_min);
+  stray_penalty += STRAY_LOSS(field_max, reference_calibration.field_max);
+  stray_penalty += STRAY_LOSS(black_white_delimiter, reference_calibration.black_white_delimiter);
+
+  int fitness = field_score - field_width_penalty - stray_penalty;
+
+  // std::cout << (int)color_delimiter << " " << (int)field_min << " " << (int)field_max << " " << (int)black_white_delimiter << std::endl;
+  // std::cout << "up: " << green_counter_up << std::endl;
+  // std::cout << "dn: " << green_counter_dn << std::endl;
+  // std::cout << "---------------" << std::endl;
+
+  return fitness;
+}
