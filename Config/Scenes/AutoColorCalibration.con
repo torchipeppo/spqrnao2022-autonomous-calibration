@@ -2,4 +2,4 @@ call Includes/Normal
 call Includes/Views
 
 # gc playing
-dr module:FieldColorsCalibrator:startCalibration
+# dr module:FieldColorsCalibrator:startCalibration

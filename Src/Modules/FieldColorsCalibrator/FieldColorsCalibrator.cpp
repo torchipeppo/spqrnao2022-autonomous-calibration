@@ -26,6 +26,8 @@
 #include <math.h>
 #include <random>
 
+#include "FieldColorsBoard.h"
+
 //see above
 #pragma GCC diagnostic pop
 
@@ -533,6 +535,8 @@ void FieldColorsCalibrator::calibrationEnd(FieldColors& fc) {
   // turn of calibration mode
   state = CalibrationState::Off;
   calibrating = false;
+
+  FieldColorsBoard::set_lower_to_cognition(FLDCOLBRD__L2C_CALIBRATION_DONE);
 }
 
 /**
@@ -579,6 +583,11 @@ void FieldColorsCalibrator::update(FieldColors& fc) {
    */
   DEBUG_RESPONSE_ONCE("module:FieldColorsCalibrator:startCalibration")
   {
+    initCalibration();
+  }
+
+  if (FieldColorsBoard::get_cognition_to_lower() == FLDCOLBRD__C2L_BEGIN_CALIBRATION) {
+    FieldColorsBoard::del_cognition_to_lower();
     initCalibration();
   }
 
