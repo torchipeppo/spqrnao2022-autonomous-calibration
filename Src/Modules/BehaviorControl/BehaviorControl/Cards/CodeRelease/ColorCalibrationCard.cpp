@@ -46,7 +46,7 @@ CARD(ColorCalibrationCard,
 });
 
 #define TILT_PHASE1 -0.65f
-#define TILT_PHASE2 -1.5f
+#define TILT_PHASE2 -1.4f
 
 class ColorCalibrationCard : public ColorCalibrationCardBase
 {

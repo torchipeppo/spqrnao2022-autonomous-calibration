@@ -32,7 +32,7 @@
 #pragma GCC diagnostic pop
 
 // for debugging
-#define FIXED_SEED true
+#define FIXED_SEED false
 #define PRINT_FITNESSES(theCrowd) for (Genome& g : theCrowd) {std::cout << g.fitness << " ";} std::cout << std::endl
                                       // the & is important!
 
