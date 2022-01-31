@@ -5,6 +5,13 @@
  *
  * @author Dana Jenett, Alexis Tsogias
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+#pragma GCC diagnostic ignored "-Wreorder-ctor"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
 
 #include "AutomaticCameraCalibrator.h"
 #include "Modules/Configuration/JointCalibrator/JointCalibrator.h"
@@ -16,6 +23,10 @@
 #include "Tools/Streams/InStreams.h"
 #include "Tools/Settings.h"
 #include <limits>
+
+#include "CameraCalibratorMain.h"
+
+#pragma GCC diagnostic pop
 
 MAKE_MODULE(AutomaticCameraCalibrator, infrastructure)
 
@@ -32,15 +43,23 @@ AutomaticCameraCalibrator::AutomaticCameraCalibrator() : functor(*this), state(I
   states[WaitForOptimize] = [this]() { idle(); };
   states[Optimize] = [this]() { optimize(); };
   states[ManualManipulation] = [this]() { listen(); };
+  OUTPUT_TEXT("Constructor!\n");
+  state = State(CameraCalibrationMain::getCurrentStateCalib());
+  OUTPUT_TEXT("Setting state: " << state);
+  
 }
 
 void AutomaticCameraCalibrator::idle()
 {
   // Do nothing
+  //OUTPUT_TEXT("Idling...!\n");
+  state = State(CameraCalibrationMain::getCurrentStateCalib());
+  //OUTPUT_TEXT("Setting state: " << state);
 }
 
 void AutomaticCameraCalibrator::init()
 {
+  OUTPUT_TEXT("Init...!\n");
   startingCameraCalibration = theCameraCalibration;
 
   firstHeadPans.clear();
@@ -71,11 +90,13 @@ void AutomaticCameraCalibrator::init()
 
 void AutomaticCameraCalibrator::moveHead()
 {
+  OUTPUT_TEXT("Moving Head...!\n");
   ASSERT(headSpeed >= 0.3);
   if(firstHeadPans.empty() && secondHeadPans.empty())
   {
     currentHeadPan = 0.0f;
     OUTPUT_TEXT("Accumulation finished. Waiting to optimize... Or manipulate samples...");
+    CameraCalibrationMain::setCurrentStateCalib(10);
     state = ManualManipulation;
   }
   else if(!firstHeadPans.empty())
@@ -221,6 +242,7 @@ void AutomaticCameraCalibrator::waitForUser()
 
 void AutomaticCameraCalibrator::optimize()
 {
+  OUTPUT_TEXT("Optimizing...");
   if(!optimizer)
   {
     // since the parameters for the robot pose are correction parameters,
@@ -255,6 +277,7 @@ void AutomaticCameraCalibrator::optimize()
         successiveConvergations = 0;
       if(successiveConvergations >= minSuccessiveConvergations)
       {
+        CameraCalibrationMain::setCurrentStateCalib(0);
         OUTPUT_TEXT("AutomaticCameraCalibrator: converged!");
         OUTPUT_TEXT("RobotPoseCorrection: " << robotPoseCorrection.translation.x() * 1000.0f
                     << " " << robotPoseCorrection.translation.y() * 1000.0f
@@ -262,6 +285,7 @@ void AutomaticCameraCalibrator::optimize()
         currentRobotPose.translation.x() += robotPoseCorrection.translation.x() * 1000.0f;
         currentRobotPose.translation.y() += robotPoseCorrection.translation.y() * 1000.0f;
         currentRobotPose.rotation = Angle::normalize(currentRobotPose.rotation + robotPoseCorrection.rotation);
+        OUTPUT_TEXT("save representation:CameraCalibration");
         abort();
 
         if(setJointOffsets)
@@ -274,10 +298,13 @@ void AutomaticCameraCalibrator::optimize()
 
 void AutomaticCameraCalibrator::listen()
 {
+  OUTPUT_TEXT("Listening...");
   if(insertionValueExistant)
     insertSample(wantedPoint, insertionOnCamera);
   if(deletionValueExistant)
     deleteSample(unwantedPoint, deletionOnCamera);
+  if(CameraCalibrationMain::getCurrentStateCalib() == 9)
+    state = State(9);
 }
 
 void AutomaticCameraCalibrator::invert(const CameraCalibration& cameraCalibration)

@@ -1233,9 +1233,9 @@ void LibCheckProvider::checkOutputs(const ActivationGraph& activationGraph, LibC
     // Check, if output has been set at least once:
     if(callCounters[i] == 0 && notSetCheck[i] == 1)
     {
-      OUTPUT_TEXT("Meeek! " << TypeRegistry::getEnumName(i) << " has not been set in this cycle (Robot " << theRobotInfo.number
-                  << (!callCounters[LibCheck::role] ? "" : ", Role: " + theTeamBehaviorStatus.role.getName())
-                  << (options == "" ? "" : ", Options: " + options) << ") !");
+      //OUTPUT_TEXT("Meeek! " << TypeRegistry::getEnumName(i) << " has not been set in this cycle (Robot " << theRobotInfo.number
+      //            << (!callCounters[LibCheck::role] ? "" : ", Role: " + theTeamBehaviorStatus.role.getName())
+       //           << (options == "" ? "" : ", Options: " + options) << ") !");
     }
     else if(notSetCheck[i] == 2)
     {

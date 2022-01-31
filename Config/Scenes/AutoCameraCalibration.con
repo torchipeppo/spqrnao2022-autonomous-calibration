@@ -1,0 +1,6 @@
+call Includes/Normal
+call Includes/Views
+
+gc playing
+call Calibrators/Camera
+# dr module:AutomaticCameraCalibrator:start
