@@ -20,6 +20,7 @@ public:
     Sample2() {};
     ~Sample2() {};
 
+
     CameraInfo cameraInfo;
     Vector2i& getPointInImage();
     Vector2i getPointInImage() const;
@@ -31,14 +32,14 @@ public:
     TorsoMatrix getTorsoMatrix() const;
     float getHeadYaw() const;
     float getHeadPitch() const;
+    CameraInfo getCameraInfo() const;
     
-    void setPointInImage(Vector2i& pointInImage_);
-    void setPointOnField(Vector2f& pointOnField_);
+    void setPointInImage(Vector2i pointInImage_);
+    void setPointOnField(Vector2f pointOnField_);
     void setTorsoMatrix(const TorsoMatrix torsoMatrix_);
     void setHeadYaw(float yaw_);
     void setHeadPitch(float pitch_);
     void setCameraInfo(CameraInfo cameraInfo_);
-
 
 private:
     Vector2i pointInImage;
@@ -47,6 +48,3 @@ private:
     float headYaw;
     float headPitch;
 };
-
-
-

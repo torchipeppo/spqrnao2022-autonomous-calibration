@@ -126,16 +126,12 @@ private:
     };
     Functor2 functor;
     friend struct Functor2;
-
-    // overall variables
     const CameraInfo::Camera startCamera = CameraInfo::lower;
-    CameraInfo::Camera currentCamera = startCamera; /**< The camera that is currently used for selecting points. */
-    Pose2f currentRobotPose; /**< the pose used to set the calibration points */
-    CameraMatrix theCameraMatrix; /**< The camera matrix that fits the current image (not the current camera) */
-    std::vector<Sample2> samples; /**< The set of samples used to calibrate the camera. */
+    CameraInfo::Camera currentCamera = startCamera;
+    Pose2f currentRobotPose; 
+    CameraMatrix theCameraMatrix;
+    std::vector<Sample2> samples;
     CameraCalibration startingCameraCalibration;
-
-    // head movement variables
     std::vector<float> firstHeadPans;
     std::vector<float> secondHeadPans;
     float currentHeadPan;
@@ -143,29 +139,23 @@ private:
     HeadAngleRequest nextHeadAngleRequest;
     RingBufferWithSum<float, 5> headPositionPanBuffer;
     RingBufferWithSum<float, 5> headPositionTiltBuffer;
-    unsigned int waitTill = 0; //For timing
-
-    // accumulation variables
+    unsigned int waitTill = 0; 
     unsigned accumulationTimestamp;
-    bool lastActionWasInsertion = false; //For the undo mechanism
-    //for deleting unwanted samples
-    Vector2i unwantedPoint = Vector2i::Zero(); /**< The sample to be deleted. */
-    CameraInfo::Camera deletionOnCamera = CameraInfo::lower; /**< The camera which detected the sample to delete. */
-    Sample2 lastDeletedSample; /**< The last sample the calibrator has deleted.  */
-    bool alreadyRevertedDeletion = true; /**< Have you already done undo?*/
-    //for inserting wanted samples
-    Vector2i wantedPoint = Vector2i::Zero(); /**< The sample to be inserted. */
-    CameraInfo::Camera insertionOnCamera = CameraInfo::lower; /**< The camera which detected the sample to insert. */
-    Sample2 lastInsertedSample; /**< The last sample the calibrator has inserted.  */
-    bool alreadyRevertedInsertion = true; /**< Have you already done undo?*/
+    bool lastActionWasInsertion = false;
+    Vector2i unwantedPoint = Vector2i::Zero();
+    CameraInfo::Camera deletionOnCamera = CameraInfo::lower;
+    Sample2 lastDeletedSample;
+    bool alreadyRevertedDeletion = true;
+    Vector2i wantedPoint = Vector2i::Zero();
+    CameraInfo::Camera insertionOnCamera = CameraInfo::lower;
+    Sample2 lastInsertedSample; 
+    bool alreadyRevertedInsertion = true;
     bool insertionValueExistant = false, deletionValueExistant = false;
-
-    // optimization variables
     std::unique_ptr<GaussNewtonOptimizer<numOfParameterTranslations>> optimizer;
     Parameters optimizationParameters;
     CameraCalibration nextCameraCalibration;
-    unsigned successiveConvergations; /**< The number of consecutive iterations that fulfil the termination criterion. */
-    int framesToWait; /**< The remaining number of frames to wait for the next iteration. */
+    unsigned successiveConvergations; 
+    int framesToWait;
     bool setJointOffsets = false;
 
     
@@ -174,6 +164,10 @@ private:
     void idle();
     void init();
     void moveHead();
+    void waitForCamera();
+    void waitForUser();
+    void waitForHeadToReachPosition();
+    void accumulate();
 
     /**
      * Automatically inverts the BodyRotationCorrection so the user does not have to do it.

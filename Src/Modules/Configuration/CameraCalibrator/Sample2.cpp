@@ -50,12 +50,12 @@ float Sample2::getHeadPitch() const
     return headPitch;
 }
 
-void Sample2::setPointInImage(Vector2i& pointInImage_)
+void Sample2::setPointInImage(Vector2i pointInImage_)
 {
     pointInImage = pointInImage_;
 }
 
-void Sample2::setPointOnField(Vector2f& pointOnField_)
+void Sample2::setPointOnField(Vector2f pointOnField_)
 {
     pointOnField = pointOnField_;
 }
