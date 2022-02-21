@@ -23,6 +23,7 @@
 #include "Tools/Streams/InStreams.h"
 #include "Tools/Settings.h"
 #include <limits>
+#include <iostream>
 
 #include "CameraCalibratorMain.h"
 
@@ -351,6 +352,8 @@ void AutomaticCameraCalibrator::update(CameraCalibrationNext& cameraCalibrationN
   processManualControls();
   states[state]();
   draw();
+
+  std::cout << "And the state is " << (int) state << std::endl;
 
   cameraCalibrationNext.setNext(nextCameraCalibration);
 }

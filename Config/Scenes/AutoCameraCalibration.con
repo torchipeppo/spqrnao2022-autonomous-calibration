@@ -2,5 +2,5 @@ call Includes/Normal
 call Includes/Views
 
 gc playing
-call Calibrators/Camera
-# dr module:AutomaticCameraCalibrator:start
+call Calibrators/Camera2
+#dr module:AutomaticCameraCalibrator2:start

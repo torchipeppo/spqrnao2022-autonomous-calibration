@@ -25,7 +25,7 @@
 #include "Representations/Communication/GameInfo.h"
 
 //#include "Modules/Configuration/CameraCalibrator/AutomaticCameraCalibrator.h"
-#include "Modules/Configuration/CameraCalibrator/CameraCalibratorMain.h"
+#include "Modules/Configuration/CameraCalibrator/CameraCalibratorNewMain.h"
 
 //see above
 #pragma GCC diagnostic pop
@@ -34,16 +34,8 @@ CARD(CameraCalibrationCard,
 {,
   CALLS(Activity),
   CALLS(Say),
-  
-  CALLS(LookAtAngles),
-  //currently unused, but might turn out useful
-  // CALLS(LookAtPoint),
-  // CALLS(LookForward),
   CALLS(Stand),
 });
-
-#define TILT_PHASE1 -0.65f
-#define TILT_PHASE2 -1.4f
 
 class CameraCalibrationCard : public CameraCalibrationCardBase
 {
@@ -71,7 +63,6 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
       {
         //std::cout << "state start\n";
         theActivitySkill(BehaviorStatus::unknown);
-        theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
         theStandSkill();
       }
     }
@@ -80,15 +71,15 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
     {
       transition
       {
-        if (CameraCalibrationMain::getCurrentStateCard() == 10)
+        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 10)
           goto optimization_state;
       }
       action
       {
         //std::cout << "state calib\n";
         theActivitySkill(BehaviorStatus::unknown);
-        theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
-        CameraCalibrationMain::setCurrentStateCard(1);
+        theStandSkill();
+        CameraCalibratorNewMain::setCurrentCameraCalibratorState(1);
       }
     }
 
@@ -96,15 +87,15 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
     {
       transition
       {
-        if (CameraCalibrationMain::getCurrentStateCard() == 0)
+        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 0)
           goto finished;
       }
       action
       {
         //std::cout << "state opt\n";
         theActivitySkill(BehaviorStatus::unknown);
-        theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
-        CameraCalibrationMain::setCurrentStateCard(9);
+        theStandSkill();
+        CameraCalibratorNewMain::setCurrentCameraCalibratorState(9);
       }
     }
 
@@ -118,7 +109,7 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
       {
         //std::cout << "Finished!\n";
         theActivitySkill(BehaviorStatus::unknown);
-        theLookAtAnglesSkill(0.f, TILT_PHASE1, 150_deg, HeadMotionRequest::lowerCamera);
+        theStandSkill();
       }
     }
 
