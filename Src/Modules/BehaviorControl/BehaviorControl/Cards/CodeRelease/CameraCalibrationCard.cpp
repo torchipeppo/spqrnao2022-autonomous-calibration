@@ -107,7 +107,7 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
       }
       action
       {
-        //std::cout << "Finished!\n";
+        std::cout << "Finished!\n";
         theActivitySkill(BehaviorStatus::unknown);
         theStandSkill();
       }
