@@ -41,7 +41,7 @@ MAKE_MODULE(FieldColorsCalibrator, infrastructure)
 // select the specific methods to use here
 // (select and combine to come if/when they have more than one alternative)
 #define CROSSOVER_FN crossover_blend      // Alternatives:   crossover_blend, crossover_sbx
-#define MUTATION_FN mutate_gaussian       // Alternatives:   mutate_gaussian, mutate_nonuniform
+#define MUTATION_FN mutate_nonuniform       // Alternatives:   mutate_gaussian, mutate_nonuniform
 
 bool loaded = false;
 bool breakCalibration = false;
