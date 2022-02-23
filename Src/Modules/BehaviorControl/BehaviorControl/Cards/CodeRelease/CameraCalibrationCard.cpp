@@ -56,14 +56,18 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
     {
       transition
       {
-        if (state_time > 3000)
+        if (state_time > 3000){
+          theSaySkill("Starting calibration procedure");
           goto calibration_state;
+        }
       }
       action
       {
         //std::cout << "state start\n";
         theActivitySkill(BehaviorStatus::unknown);
         theStandSkill();
+        //theSaySkill("The camera calibration procedure has begun.");
+
       }
     }
 
@@ -71,8 +75,10 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
     {
       transition
       {
-        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 10)
+        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 10){
+          theSaySkill("Accumulated enough points. Starting optimizer");
           goto optimization_state;
+        }
       }
       action
       {
@@ -80,6 +86,7 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
         theActivitySkill(BehaviorStatus::unknown);
         theStandSkill();
         CameraCalibratorNewMain::setCurrentCameraCalibratorState(1);
+        //theSaySkill("The whole calibration procedure has been completed successfully. The calibration has been saved to my configuration files.");
       }
     }
 
@@ -87,8 +94,10 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
     {
       transition
       {
-        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 0)
+        if (CameraCalibratorNewMain::getCurrentCameraCalibratorState() == 0){
+          theSaySkill("Optimization finished.");
           goto finished;
+          }
       }
       action
       {
@@ -110,6 +119,7 @@ class CameraCalibrationCard : public CameraCalibrationCardBase
         std::cout << "Finished!\n";
         theActivitySkill(BehaviorStatus::unknown);
         theStandSkill();
+        theSaySkill("The whole calibration procedure has been completed successfully. The calibration has been saved to my configuration files.");
       }
     }
 
