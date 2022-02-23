@@ -2,6 +2,7 @@
  * @file AutomaticCameraCalibratorNew.h
  *
  * File that implements the automatic camera calibration
+ * (includes some code from the rest of the bhuman framework to process head motion requests)
  *
  * @author Amila Sikalo
  */
@@ -19,6 +20,9 @@
 #include "Representations/Perception/ImagePreprocessing/CameraMatrix.h"
 #include "Representations/Perception/FieldPercepts/LinesPercept.h"
 #include "Representations/Sensing/TorsoMatrix.h"
+#include "Representations/Configuration/HeadLimits.h"
+#include "Representations/MotionControl/HeadMotionRequest.h"
+#include "Representations/Sensing/RobotModel.h"
 #include "Tools/RingBufferWithSum.h"
 #include "Tools/Math/Eigen.h"
 #include "Tools/Math/Geometry.h"
@@ -39,6 +43,10 @@ MODULE(AutomaticCameraCalibrator2,
   REQUIRES(RobotDimensions),
   REQUIRES(TorsoMatrix),
   REQUIRES(RobotPose),
+  REQUIRES(HeadLimits),
+  REQUIRES(HeadMotionRequest),
+  REQUIRES(RobotCameraMatrix),
+  REQUIRES(RobotModel),
   PROVIDES(CameraCalibrationNext),
   REQUIRES(CameraCalibrationNext),
   PROVIDES(CameraResolutionRequest),
@@ -200,6 +208,19 @@ private:
     bool projectLineOnFieldIntoImage(const Geometry::Line& lineOnField, const CameraMatrix& cameraMatrix, const CameraInfo& cameraInfo, Geometry::Line& lineInImage) const;
     std::function<void(void)> current_operation;
     State currentState;
+
+
+
+    bool override_head_angle_request;
+
+    // cameracontrolengine stuff //
+
+    Rangea panBounds;
+
+    void update_default(HeadAngleRequest& headAngleRequest);
+
+    void calculatePanTiltAngles(const Vector3f& hip2Target, CameraInfo::Camera camera, Vector2a& panTilt) const;
+    void adjustTiltBoundToShoulder(Angle pan, CameraInfo::Camera camera, Rangea& tiltBound) const;
 
 
 
