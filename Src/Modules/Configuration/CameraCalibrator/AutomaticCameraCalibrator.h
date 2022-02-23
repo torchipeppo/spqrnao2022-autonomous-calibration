@@ -65,17 +65,17 @@ private:
    */
   ENUM(State,
   {,
-    Idle,
-    Init,
-    MoveHead,
-    WaitForCamera,
-    WaitForHeadToReachPosition,
-    WaitForAccumulate,
-    Accumulate,
-    WaitForUser,
-    WaitForOptimize,
-    Optimize,
-    ManualManipulation,
+    Idle, // 0 
+    Init, // 1
+    MoveHead, // 2
+    WaitForCamera, // 3
+    WaitForHeadToReachPosition, // 4
+    WaitForAccumulate, // 5
+    Accumulate, // 6
+    WaitForUser, // 7
+    WaitForOptimize, // 8
+    Optimize, // 9
+    ManualManipulation, // 10
   });
 
   /**
