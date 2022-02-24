@@ -20,14 +20,17 @@
     #include "Platform/Time.h"
     #include "Platform/SystemCall.h"
     #include "Tools/Debugging/DebugDrawings.h"
+    #include "Tools/Module/Module.h"
     #include "Tools/Math/Approx.h"
     #include "Tools/Math/Transformation.h"
     #include "Tools/Streams/InStreams.h"
     #include "Tools/Settings.h"
+    #include "Platform/File.h"
     #include "Sample2.h"
     #include <limits>
      
     #include <iostream>
+    #include <stdio.h>
      
     #include "CameraCalibratorNewMain.h"
 
@@ -46,6 +49,7 @@
     {
         std::cout << "AutomaticCameraCalibrator2 Constructor!\n";
         current_operation = std::bind(&AutomaticCameraCalibrator2::idle, this);
+        currentIteration = 0;
         // currentState = State::Idle;
         // cameracontrolengine stuff //
         panBounds.min = theHeadLimits.minPan();
@@ -360,6 +364,7 @@
             // only do an iteration after some frames have passed
             if (framesToWait <= 0)
             {
+                currentIteration++;
                 framesToWait = numOfFramesToWait;
                 const float delta = optimizer->iterate(optimizationParameters, Parameters::Constant(0.0001f));
                 if (!std::isfinite(delta))
@@ -374,13 +379,29 @@
                 // the camera calibration is refreshed from the current optimizer state
                 Pose2f robotPoseCorrection;
                 unpack(optimizationParameters, nextCameraCalibration, robotPoseCorrection);
-     
+
                 if (std::abs(delta) < terminationCriterion)
                     ++successiveConvergations;
                 else
                     successiveConvergations = 0;
-                if (successiveConvergations >= minSuccessiveConvergations)
+                if (successiveConvergations >= minSuccessiveConvergations ||
+                    currentIteration == maxIterations)
                 {
+                    std::string name = "cameraCalibration.cfg";
+                    for(std::string& fullName : File::getFullNames(name))
+                    {
+                        File path(fullName, "r", false);
+                        if(path.exists())
+                        {
+                            name = std::move(fullName);
+                            break;
+                        }
+                    }
+                    std::cout << "Saving to" << name << std::endl;
+                    OUTPUT_TEXT("Saving to " + name);
+                    OutMapFile stream(name, false);
+                    ASSERT(stream.exists());
+                    stream << theCameraCalibration;
                     // CameraCalibrationMain::setCurrentStateCalib(0);
                     CameraCalibratorNewMain::setCurrentCameraCalibratorState(0);
                     OUTPUT_TEXT("AutomaticCameraCalibrator: converged!");

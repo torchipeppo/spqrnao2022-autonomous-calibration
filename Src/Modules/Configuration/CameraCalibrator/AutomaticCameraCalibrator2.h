@@ -65,6 +65,7 @@ MODULE(AutomaticCameraCalibrator2,
     (float)(0.5f) headMotionWaitTime,  /** time the robot has to wait to change the headposition (in s) */
     (unsigned)(300) minimumSampleDistance,  /** the minimum field distance of samples to each other */
     (float)(5.f) deletionThreshold,
+    (unsigned)(100) maxIterations,
   }),
 });
 
@@ -208,6 +209,7 @@ private:
     bool projectLineOnFieldIntoImage(const Geometry::Line& lineOnField, const CameraMatrix& cameraMatrix, const CameraInfo& cameraInfo, Geometry::Line& lineInImage) const;
     std::function<void(void)> current_operation;
     State currentState;
+    unsigned currentIteration = 0;
 
 
 
