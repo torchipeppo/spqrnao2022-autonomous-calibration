@@ -25,6 +25,8 @@
 #include "Representations/Communication/GameInfo.h"
 #include "Representations/Perception/BallPercepts/BallPercept.h"
 #include "Representations/BehaviorControl/FieldBall.h"
+#include "Representations/Modeling/RobotPose.h"
+#include "Representations/Configuration/FieldDimensions.h"
 
 //see above
 #pragma GCC diagnostic pop
@@ -32,12 +34,15 @@
 CARD(ACTestCard,
 {,
   REQUIRES(FieldBall),
+  REQUIRES(RobotPose),
+  REQUIRES(FieldDimensions),
 
   CALLS(Activity),
   CALLS(Say),
 
   CALLS(LookLeftAndRight),
   CALLS(LookAtPoint),
+  CALLS(LookForward),
 
   CALLS(Stand),
   CALLS(WalkToTargetPathPlanner),
@@ -45,6 +50,9 @@ CARD(ACTestCard,
 
 #define DISTANCE_TO_BALL_THRESHOLD 1000.0f
 #define REPORT_BALL_IN_GLOBAL true
+
+#define WALK_TO_GOAL_THRESHOLD 50.0f     // millimeters
+#define OPPONENT_GOAL Vector2f(theFieldDimensions.xPosOpponentGroundline, 0.0f)
 
 class ACTestCard : public ACTestCardBase
 {
@@ -60,6 +68,8 @@ class ACTestCard : public ACTestCardBase
     return false;
   }
 
+  bool spoken = false;
+
   option
   {
 
@@ -68,6 +78,7 @@ class ACTestCard : public ACTestCardBase
       transition
       {
         if (theFieldBall.ballWasSeen()) {
+          spoken = false;
           goto walk_to_ball;
         }
       }
@@ -78,7 +89,10 @@ class ACTestCard : public ACTestCardBase
         theActivitySkill(BehaviorStatus::unknown);
         theLookLeftAndRightSkill();
         theStandSkill();
-        theSaySkill("Here I go");
+        if (!spoken) {
+          theSaySkill("Here I go");
+          spoken = true;
+        }
       }
     }
 
@@ -103,6 +117,7 @@ class ACTestCard : public ACTestCardBase
       {
         // TODO doesn't seem to transition? investigate next time
         if (state_time > 1000) {
+          spoken = false;
           goto walk_to_goal;
         }
       }
@@ -125,11 +140,51 @@ class ACTestCard : public ACTestCardBase
           msg += std::to_string(theFieldBall.positionRelative.y());
           msg += " y";
         }
-        theSaySkill(msg);
+        if (!spoken) {
+          theSaySkill(msg);
+          spoken = true;
+        }
       }
     }
 
-    state(walk_to_goal)
+    state(walk_to_goal) {
+      transition
+      {
+        if ((theRobotPose.translation - OPPONENT_GOAL).norm() < WALK_TO_GOAL_THRESHOLD) {
+          goto report_goal;
+        }
+      }
+      action
+      {
+        theActivitySkill(BehaviorStatus::unknown);
+        theLookForwardSkill();
+        theWalkToTargetPathPlannerSkill(Pose2f(0.7f, 0.7f, 0.7f), Pose2f(OPPONENT_GOAL.x(), OPPONENT_GOAL.y()));
+      }
+    }
+
+    state(report_goal)
+    {
+      transition
+      {
+        // TODO doesn't seem to transition? investigate next time
+        if (state_time > 1000) {
+          spoken = false;
+          goto sleep;
+        }
+      }
+      action
+      {
+        theActivitySkill(BehaviorStatus::unknown);
+        theLookForwardSkill();
+        theStandSkill();
+        if (!spoken) {
+          theSaySkill("I think I got to the goal");
+          spoken = true;
+        }
+      }
+    }
+
+    state(sleep)
     {
       transition
       {
@@ -137,7 +192,9 @@ class ACTestCard : public ACTestCardBase
       }
       action
       {
-        theSaySkill("So' stanco");
+        theActivitySkill(BehaviorStatus::unknown);
+        theLookForwardSkill();
+        theStandSkill();
       }
     }
 
