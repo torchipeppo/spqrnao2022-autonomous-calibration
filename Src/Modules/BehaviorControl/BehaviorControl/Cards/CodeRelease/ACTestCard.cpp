@@ -115,8 +115,7 @@ class ACTestCard : public ACTestCardBase
     {
       transition
       {
-        // TODO doesn't seem to transition? investigate next time
-        if (state_time > 1000) {
+        if (state_time > 10000) {
           spoken = false;
           goto walk_to_goal;
         }
@@ -129,19 +128,21 @@ class ACTestCard : public ACTestCardBase
         theStandSkill();
         std::string msg = "The ball is at ";
         if (REPORT_BALL_IN_GLOBAL) {
-          msg += std::to_string(theFieldBall.positionOnField.x());
+          msg += std::to_string((int) theFieldBall.positionOnField.x());
           msg += " x, ";
-          msg += std::to_string(theFieldBall.positionOnField.y());
+          msg += std::to_string((int) theFieldBall.positionOnField.y());
           msg += " y";
         }
         else {
-          msg += std::to_string(theFieldBall.positionRelative.x());
+          msg += std::to_string((int) theFieldBall.positionRelative.x());
           msg += " x, ";
-          msg += std::to_string(theFieldBall.positionRelative.y());
+          msg += std::to_string((int) theFieldBall.positionRelative.y());
           msg += " y";
         }
-        if (!spoken) {
+        if (!spoken && state_time > 2000) {
           theSaySkill(msg);
+          std::cout << msg << std::endl;
+          OUTPUT_TEXT(msg);
           spoken = true;
         }
       }
@@ -166,8 +167,7 @@ class ACTestCard : public ACTestCardBase
     {
       transition
       {
-        // TODO doesn't seem to transition? investigate next time
-        if (state_time > 1000) {
+        if (state_time > 5000) {
           spoken = false;
           goto sleep;
         }
@@ -177,7 +177,7 @@ class ACTestCard : public ACTestCardBase
         theActivitySkill(BehaviorStatus::unknown);
         theLookForwardSkill();
         theStandSkill();
-        if (!spoken) {
+        if (!spoken && state_time > 2000) {
           theSaySkill("I think I got to the goal");
           spoken = true;
         }

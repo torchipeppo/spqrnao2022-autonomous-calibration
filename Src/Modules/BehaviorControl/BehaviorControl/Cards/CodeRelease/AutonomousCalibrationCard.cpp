@@ -182,7 +182,7 @@ class AutonomousCalibrationCard : public AutonomousCalibrationCardBase
     {
       transition
       {
-        if (state_time > 500) {
+        if (state_time > 8000) {
           goto camera_start;
         }
       }
