@@ -18,9 +18,9 @@ void MidCornerPerceptor::update(MidCorner& midCorner)
 
 bool MidCornerPerceptor::searchForBigT(MidCorner& midCorner) const
 {
-  for(auto& intersection : theFieldLineIntersections.intersections)
-    if(intersection.type == FieldLineIntersections::Intersection::T &&
-       (intersection.additionalType == FieldLineIntersections::Intersection::big || intersection.additionalType == FieldLineIntersections::Intersection::mid))
+  for(auto& intersection : theFieldLineIntersections.intersections) //MEGAFIX ELEONORA AND LEONARDO
+    if(intersection.type == FieldLineIntersections::Intersection::T && intersection.additionalType == FieldLineIntersections::Intersection::mid)
+    //   (intersection.additionalType == FieldLineIntersections::Intersection::big || intersection.additionalType == FieldLineIntersections::Intersection::mid))
     {
       midCorner.translation = intersection.pos;
       midCorner.rotation = intersection.dir1.angle();

@@ -1,6 +1,8 @@
 /**
  * @file FieldRelations.cpp
  * @author <a href="mailto:jesse@tzi.de">Jesse Richter-Klug</a>
+ * se ve va sparatevi in petto
+ * the new field relations with the goal box (which isn't called goal box now) aren't added because there is any field feature that uses them.
  */
 
 #include "FieldRelations.h"
