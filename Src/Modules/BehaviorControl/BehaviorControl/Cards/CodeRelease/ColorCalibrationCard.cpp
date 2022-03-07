@@ -27,7 +27,7 @@
 #include "Representations/BehaviorControl/BehaviorStatus.h"
 #include "Representations/MotionControl/HeadMotionRequest.h"
 
-#include "Modules/FieldColorsCalibrator/FieldColorsBoard.h"
+#include "Modules/Configuration/FieldColorsCalibrator/FieldColorsBoard.h"
 
 //see above
 #pragma GCC diagnostic pop

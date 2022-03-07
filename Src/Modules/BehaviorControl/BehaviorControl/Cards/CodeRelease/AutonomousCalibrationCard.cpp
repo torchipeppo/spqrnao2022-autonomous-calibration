@@ -31,7 +31,7 @@
 #include "Representations/MotionControl/MotionRequest.h"
 #include "Representations/Communication/GameInfo.h"
 
-#include "Modules/FieldColorsCalibrator/FieldColorsBoard.h"
+#include "Modules/Configuration/FieldColorsCalibrator/FieldColorsBoard.h"
 #include "Modules/Configuration/CameraCalibrator/CameraCalibratorNewMain.h"
 
 //see above
