@@ -11,7 +11,10 @@
 #include "Platform/SystemCall.h"
 #include "Representations/BehaviorControl/Skills.h"
 #include "Tools/Debugging/Annotation.h"
+#include "Tools/Global.h"
+#include "Tools/Settings.h"
 #include <regex>
+#include <fstream>
 
 MAKE_MODULE(BehaviorControl, behaviorControl, BehaviorControl::getExtModuleInfo);
 
@@ -62,6 +65,32 @@ void BehaviorControl::update(ActivationGraph& activationGraph)
   theSkillRegistry.postProcess();
 
   theLibCheck.performCheck(theMotionRequest);
+}
+
+// CALIBRATION STUFF
+// THIS RESTARTS BHUMAN, SO IT SHOULD KILL THE CURRENT CODE
+void change_scenario(std::string new_scenario) {
+  #ifdef TARGET_ROBOT
+  const std::string settings_path = "~/Config/settings.cfg";
+  #else
+  const std::string settings_path = "../../Config/settings.cfg";
+  #endif
+  std::string old_scenario = Global::getSettings().scenario;
+  // read the file all at once
+  std::ifstream settings_file_in(settings_path);
+  std::ostringstream settings_file_to_string;
+  settings_file_to_string << settings_file_in.rdbuf();
+  std::string settings = settings_file_to_string.str();
+  settings_file_in.close();
+  // change the scenario
+  unsigned scenario_linestart_pos = settings.find("scenario");
+  unsigned scenario_pos = settings.find(old_scenario, scenario_linestart_pos);
+  settings.replace(scenario_pos, old_scenario.length(), new_scenario);
+  // write new settings
+  std::ofstream settings_file_out(settings_path, std::ios::trunc);
+  settings_file_out << settings;
+  // REBOOT BHUMAN
+  std::system("bhumand restart");
 }
 
 void BehaviorControl::execute()
@@ -173,4 +202,16 @@ void BehaviorControl::execute()
   SKILL(Activity)(BehaviorStatus::unknown);
   SKILL(LookForward)();
   SKILL(SpecialAction)(SpecialActionRequest::sitDown);
+
+
+  /////   CALIBRATION STUFF!!   /////
+  if (theEnhancedKeyStates.pressed[EnhancedKeyStates::headFront] && theEnhancedKeyStates.pressed[EnhancedKeyStates::headMiddle] &&
+      theEnhancedKeyStates.pressedDuration[EnhancedKeyStates::headFront] > 1000) {
+    if (Global::getSettings().scenario == "AutonomousCalibration") {
+      change_scenario("Default");
+    }
+    else {
+      change_scenario("AutonomousCalibration");
+    }
+  }
 }
