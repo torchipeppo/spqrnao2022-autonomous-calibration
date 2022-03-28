@@ -71,7 +71,7 @@ void BehaviorControl::update(ActivationGraph& activationGraph)
 // THIS RESTARTS BHUMAN, SO IT SHOULD KILL THE CURRENT CODE
 void change_scenario(std::string new_scenario) {
   #ifdef TARGET_ROBOT
-  const std::string settings_path = "~/Config/settings.cfg";
+  const std::string settings_path = "/home/nao/Config/settings.cfg";
   #else
   const std::string settings_path = "../../Config/settings.cfg";
   #endif
@@ -90,7 +90,7 @@ void change_scenario(std::string new_scenario) {
   std::ofstream settings_file_out(settings_path, std::ios::trunc);
   settings_file_out << settings;
   // REBOOT BHUMAN
-  std::system("bhumand restart");
+  std::system("/home/nao/bin/bhumand restart");
 }
 
 void BehaviorControl::execute()
@@ -98,6 +98,17 @@ void BehaviorControl::execute()
 #ifdef TARGET_SIM
   MODIFY("module:BehaviorControl:status", status);
 #endif
+
+  /////   CALIBRATION STUFF!!   /////
+  if (theEnhancedKeyStates.pressed[EnhancedKeyStates::headFront] && theEnhancedKeyStates.pressed[EnhancedKeyStates::headMiddle] &&
+      theEnhancedKeyStates.pressedDuration[EnhancedKeyStates::headFront] > 1000) {
+    if (Global::getSettings().scenario == "AutonomousCalibration") {
+      change_scenario("Default");
+    }
+    else {
+      change_scenario("AutonomousCalibration");
+    }
+  }
 
   //is usb mounted? - Sound
   if(theEnhancedKeyStates.hitStreak[KeyStates::headMiddle] == 3)
@@ -203,15 +214,4 @@ void BehaviorControl::execute()
   SKILL(LookForward)();
   SKILL(SpecialAction)(SpecialActionRequest::sitDown);
 
-
-  /////   CALIBRATION STUFF!!   /////
-  if (theEnhancedKeyStates.pressed[EnhancedKeyStates::headFront] && theEnhancedKeyStates.pressed[EnhancedKeyStates::headMiddle] &&
-      theEnhancedKeyStates.pressedDuration[EnhancedKeyStates::headFront] > 1000) {
-    if (Global::getSettings().scenario == "AutonomousCalibration") {
-      change_scenario("Default");
-    }
-    else {
-      change_scenario("AutonomousCalibration");
-    }
-  }
 }
