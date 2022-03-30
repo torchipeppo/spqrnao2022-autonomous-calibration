@@ -132,4 +132,6 @@ private:
 
   SkillRegistry theSkillRegistry; /**< The manager of all skills. */
   CardRegistry theCardRegistry; /**< The manager of all cards. */
+
+  unsigned last_scenario_change_unlock = 0;    /**< CALIBRATION STUFF service variable, since the sequence is hold head, then press chest to avoid accidental activations */
 };

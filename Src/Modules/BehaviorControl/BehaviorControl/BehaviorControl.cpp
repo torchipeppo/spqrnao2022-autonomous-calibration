@@ -106,8 +106,17 @@ void BehaviorControl::execute()
       change_scenario("Default");
     }
     else {
-      change_scenario("AutonomousCalibration");
+      // change_scenario("AutonomousCalibration");
+      // let's make it a little harder to prevent accidental activation in-game
+      if (theFrameInfo.getTimeSince(last_scenario_change_unlock) > 2000) {
+        SystemCall::say("Now!");
+        last_scenario_change_unlock = theFrameInfo.time;
+      }
     }
+  }
+
+  if (theEnhancedKeyStates.pressed[EnhancedKeyStates::chest] && theFrameInfo.getTimeSince(last_scenario_change_unlock) < 2000) {
+    change_scenario("AutonomousCalibration");
   }
 
   //is usb mounted? - Sound

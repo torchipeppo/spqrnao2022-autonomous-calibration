@@ -6,7 +6,7 @@
  * Originally created to automatically start autonomous calibration,
  * but it might turn out to be useful in other contexts too,
  * such as small tests w/o gamecontroller
- * (tests prove that triple chest button to penalize still works).
+ * (tests prove that chest button to penalize still works).
  * Note that the robot will still connect to the gamecontroller,
  * this module just overrides the RawGameData.
  * 
